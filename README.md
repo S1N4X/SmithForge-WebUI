@@ -3,8 +3,7 @@
   <img src="smithforge/img/smithforge_logo_white_small_v2.gif" alt="SmithForge Logo">
 </p>
 
-# SmithForge
-## WebUI Edition
+# SmithForge: WebUI Edition
 
 SmithForge WebUI is a web-based interface for the SmithForge tool, which allows you to seamlessly combine two 3MF models by overlaying and embedding a Hueforge model onto a base shape with automatic scaling, positioning, and precise intersection alignment. This project includes a Docker setup for easy deployment.
 
