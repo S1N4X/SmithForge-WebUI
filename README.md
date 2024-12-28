@@ -1,6 +1,6 @@
 
 <p align="center">
-  <img src="smithforge/img/smithforge_logo_white_small_v2.gif" alt="SmithForge Logo">
+  <img src="img/smithforge_logo_white_small_v2.gif" alt="SmithForge Logo">
 </p>
 
 # SmithForge: WebUI Edition
