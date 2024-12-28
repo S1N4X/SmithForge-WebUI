@@ -1,0 +1,37 @@
+# Operating System Files
+.DS_Store
+Thumbs.db
+desktop.ini
+
+# Images
+img/*
+!img/process.png
+!img/smithforge_logo_white_small_v2.gif
+
+# 3D Printing Files
+*.gcode
+*.stl.bak
+*.3mf.bak
+*.fff
+*.pickle
+
+# Development Environment
+.vscode/
+__pycache__/
+*.pyc
+.env
+venv/
+.idea/
+
+# Project Specific Directories
+archive/
+archive/**
+inputs/
+inputs/**
+outputs/
+outputs/**
+
+# Logs and Temporary Files
+*.log
+temp/
+tmp/

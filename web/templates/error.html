@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SmithForge - Error</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background: #f8f9fa; padding: 20px; }
+        .main-container { max-width: 800px; margin: 0 auto; }
+        .logo {
+            max-width: 150px;
+            margin: 0 auto 20px;
+            display: block;
+            mix-blend-mode: multiply;
+        }
+        .error-section {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 20px 0;
+        }
+        .error-icon {
+            color: #e74c3c;
+            font-size: 48px;
+            margin: 20px 0;
+        }
+        .error-message {
+            background: #fff5f5;
+            border-left: 4px solid #e74c3c;
+            padding: 15px;
+            margin: 20px 0;
+            color: #c0392b;
+            font-family: monospace;
+            white-space: pre-wrap;
+        }
+        .btn-outline-primary {
+            background: linear-gradient(145deg, #6e7070 0%, #434444 100%);
+            border: 1px solid #3a3a3a;
+            color: white;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn-outline-primary:hover {
+            background: linear-gradient(145deg, #7a7c7c 0%, #4f5050 100%);
+            color: white;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <img src="{{ url_for('img', path='smithforge_logo_white_small_v2.gif') }}" alt="SmithForge Logo" class="logo">
+        
+        <div class="error-section text-center">
+            <i class="fas fa-exclamation-triangle error-icon"></i>
+            <h1 class="h3 mb-4">Forging Failed</h1>
+            
+            <div class="error-message text-left">
+                {{ error }}
+            </div>
+
+            <div class="mt-4">
+                <a href="/" class="btn btn-outline-primary btn-lg">
+                    <i class="fas fa-redo"></i> Try Again
+                </a>
+            </div>
+        </div>
+
+        <footer class="text-center mt-4 mb-4">
+            <small class="text-muted">
+                <a href="https://github.com/S1N4X/SmithForge" target="_blank">
+                    <i class="fab fa-github"></i> GitHub Repository
+                </a>
+                &nbsp;|&nbsp;
+                Licensed under 
+                <a href="https://www.gnu.org/licenses/gpl-3.0" target="_blank">GPL-3.0</a>
+            </small>
+        </footer>
+    </div>
+</body>
+</html>

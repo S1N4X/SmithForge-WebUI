@@ -1,0 +1,258 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SmithForge WebUI</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        body {
+            background: #f8f9fa;
+            padding: 20px;
+        }
+        .main-container {
+            max-width: 1200px;
+            margin: 0 auto;
+        }
+        .text-title {
+            font-family: 'Merriweather', serif;
+            text-shadow: 1px 1px 2px #2c2c2c;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
+        .logo {
+            max-width: 150px;
+            margin: 0 auto 2px;
+            display: block;
+            mix-blend-mode: multiply;
+        }
+        .form-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }
+        .form-section h3 {
+            font-size: 1.1rem;
+            margin-bottom: 15px;
+            color: #2c3e50;
+        }
+        .help-text {
+            font-size: 0.85em;
+            color: #6c757d;
+        }
+        .optional-toggle {
+            cursor: pointer;
+            padding: 10px;
+            background: #f8f9fa;
+            border-radius: 4px;
+            margin-bottom: 10px;
+        }
+        .optional-toggle:hover {
+            background: #e9ecef;
+        }
+        .optional-section {
+            display: none;
+            padding: 10px;
+            border-left: 3px solid #2c2c2c;
+        }
+        .required-label::after {
+            content: "*";
+            color: #dc3545;
+            margin-left: 4px;
+        }
+        
+        @keyframes fireAnimation {
+            0% { background-position: 0% 50%; }
+            50% { background-position: 100% 50%; }
+            100% { background-position: 0% 50%; }
+        }
+        
+        .btn-primary {
+            background: linear-gradient(145deg, #6e7070 0%, #434444 100%);
+            border: 1px solid #3a3a3a;
+            color: white;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+        .btn-primary:hover {
+            background: linear-gradient(145deg, #7a7c7c 0%, #4f5050 100%);
+            border: 1px solid #3a3a3a;
+            color: white;
+        }
+        
+        .btn-processing {
+            background: linear-gradient(45deg, #8b4513, #cd853f, #8b4513);
+            background-size: 200% 200%;
+            animation: fireAnimation 2s ease infinite;
+            border: 1px solid #3a3a3a;
+            color: white;
+            pointer-events: none;
+            text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+        }
+        
+        .btn-processing:hover {
+            color: white;
+            order: 1px solid #3a3a3a;
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <img src="{{ url_for('img', path='smithforge_logo_white_small_v2.gif') }}" alt="SmithForge Logo" class="logo">
+        <h1 class="text-title">SmithForge</h1>
+        <h2 class="text-center h5 mb-4">WebUI Edition</h2>
+        
+        <form action="/run-smithforge" method="post" enctype="multipart/form-data">
+            <div class="row">
+                <!-- Left Column - Required Fields -->
+                <div class="col-md-6">
+                    <div class="form-section">
+                        <h3><i class="fas fa-file-upload"></i> Required Files</h3>
+                        <div class="form-group">
+                            <label class="required-label" for="hueforge_file">Overlay / Hueforge Model</label>
+                            <input type="file" name="hueforge_file" id="hueforge_file" accept=".3mf" class="form-control" required />
+                            <small class="help-text">The model to be placed on top</small>
+                        </div>
+                        <div class="form-group">
+                            <label class="required-label" for="base_file"> Base Shape Model</label>
+                            <input type="file" name="base_file" id="base_file" accept=".3mf" class="form-control" required />
+                            <small class="help-text">The model to be used as the base</small>
+                        </div>
+                    </div>
+
+                    <div class="form-section">
+                        <h3><i class="fas fa-file-export"></i> Output Settings</h3>
+                        <div class="form-group">
+                            <label for="output_name">Output Filename</label>
+                            <input type="text" name="output_name" id="output_name" class="form-control" 
+                                   placeholder="Leave empty for automatic name" />
+                            <small class="help-text">Will combine base and overlay names if left empty</small>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Right Column - Optional Fields -->
+                <div class="col-md-6">
+                    <div class="form-section">
+                        <h3><i class="fas fa-cogs"></i> Optional settings</h3>
+                        <div class="optional-toggle" onclick="toggleSection('rotation')">
+                            <i class="fas fa-sync"></i>  Base shape rotation
+                            <i class="fas fa-chevron-down float-right"></i>
+                        </div>
+                        <div id="rotation" class="optional-section">
+                            <div class="form-group">
+                                <label for="rotate_base">Degrees of rotation</label>
+                                <input type="number" name="rotate_base" id="rotate_base" value="0" class="form-control" />
+                                <small class="help-text">Rotate the base model around Z axis (0-360°)</small>
+                            </div>
+                        </div>
+
+                        <div class="optional-toggle mt-3" onclick="toggleSection('scaling')">
+                            <i class="fas fa-expand"></i>  Overlay scaling
+                            <i class="fas fa-chevron-down float-right"></i>
+                        </div>
+                        <div id="scaling" class="optional-section">
+                            <div class="form-group">
+                                <label for="force_scale">Force scale</label>
+                                <input type="number" step="0.1" name="force_scale" id="force_scale" class="form-control" />
+                                <small class="help-text">Leave empty for automatic scaling</small>
+                            </div>
+                            <div class="form-group form-check">
+                                <input type="checkbox" class="form-check-input" id="scaledown" name="scaledown">
+                                <label class="form-check-label" for="scaledown">Allow Overlay Scaledown</label>
+                                <small class="help-text">Allow scaling down if computed scale is less than 1.0</small>
+                            </div>
+                        </div>
+
+                        <div class="optional-toggle mt-3" onclick="toggleSection('position')">
+                            <i class="fas fa-arrows-alt"></i>  Overlay position
+                            <i class="fas fa-chevron-down float-right"></i>
+                        </div>
+                        <div id="position" class="optional-section">
+                            <div class="row">
+                                <div class="col-4">
+                                    <div class="form-group">
+                                        <label for="xshift">X shift</label>
+                                        <input type="number" step="0.5" name="xshift" id="xshift" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-group">
+                                        <label for="yshift">Y shift</label>
+                                        <input type="number" step="0.5" name="yshift" id="yshift" class="form-control" />
+                                    </div>
+                                </div>
+                                <div class="col-4">
+                                    <div class="form-group">
+                                        <label for="zshift">Z shift</label>
+                                        <input type="number" step="0.5" name="zshift" id="zshift" class="form-control" />
+                                    </div>
+                                </div>
+                            </div>
+                            <small class="help-text">All measurements in millimeters<br>Leave empty for automatic positioning</small>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-section">
+                <button type="submit" id="submitBtn" class="btn btn-primary btn-lg btn-block">
+                    <i class="fas fa-hammer"></i> Start Forging
+                </button>
+            </div>
+        </form>
+
+        <!-- Add footer with license and repo link -->
+        <footer class="text-center mt-4 mb-4">
+            <small class="text-muted">
+                <a href="https://github.com/S1N4X/SmithForge" target="_blank">
+                    <i class="fab fa-github"></i> GitHub Repository
+                </a>
+                &nbsp;|&nbsp;
+                Licensed under 
+                <a href="https://www.gnu.org/licenses/gpl-3.0" target="_blank">GPL-3.0</a>
+            </small>
+        </footer>
+    </div>
+
+    <script>
+        function toggleSection(id) {
+            const section = document.getElementById(id);
+            const currentDisplay = section.style.display;
+            section.style.display = currentDisplay === 'block' ? 'none' : 'block';
+        }
+
+        // Add new function to generate filename
+        function updateOutputFilename() {
+            const baseFile = document.getElementById('base_file').files[0];
+            const hueforgeFile = document.getElementById('hueforge_file').files[0];
+            
+            if (baseFile && hueforgeFile) {
+                const baseName = baseFile.name.replace('.3mf', '');
+                const hueforgeName = hueforgeFile.name.replace('.3mf', '');
+                const timestamp = new Date().toISOString()
+                    .replace(/[:-]/g, '')
+                    .replace('T', '_')
+                    .split('.')[0];
+                
+                const outputName = `combined_${baseName}_${hueforgeName}_${timestamp}.3mf`;
+                document.getElementById('output_name').value = outputName;
+            }
+        }
+
+        // Add event listeners for file inputs
+        document.getElementById('base_file').addEventListener('change', updateOutputFilename);
+        document.getElementById('hueforge_file').addEventListener('change', updateOutputFilename);
+
+        document.querySelector('form').addEventListener('submit', function(e) {
+            const btn = document.getElementById('submitBtn');
+            btn.classList.remove('btn-primary');
+            btn.classList.add('btn-processing');
+            btn.innerHTML = '<i class="fas fa-fire"></i> Forging...';
+        });
+    </script>
+</body>
+</html>

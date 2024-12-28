@@ -1,0 +1,188 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>SmithForge - Forging complete</title>
+    <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <style>
+        body { background: #f8f9fa; padding: 20px; }
+        .main-container { max-width: 1000px; margin: 0 auto; }
+        .text-title {
+            font-family: 'Merriweather', serif;
+            text-shadow: 1px 1px 2px #2c2c2c;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
+        .logo {
+            max-width: 150px;
+            margin: 0 auto 2px;
+            display: block;
+            mix-blend-mode: multiply;
+        }
+        .logo-large {
+            width: 450px;
+            height: auto;
+            image-rendering: -webkit-optimize-contrast; /* For Webkit (Chrome, Safari) */
+            image-rendering: crisp-edges; /* For Firefox */
+            image-rendering: pixelated; /* For other browsers */
+            margin: 55px auto 20px; /* Add margin to ensure it does not touch the text */
+            display: block;
+            mix-blend-mode: multiply;
+            position: relative;
+            left: -40px;
+        }
+        .log-window {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-line;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 20px 0;
+            line-height: 0.8;
+        }
+        .log-line {
+            margin: 0;
+            padding: 0 0 0 0;
+            font-size: 0.9em;
+        }
+        .log-line:empty {
+            display: none;
+        }
+        .success-icon {
+            color: #27ae60;
+            font-size: 48px;
+            margin: 20px 0;
+        }
+        .note-section {
+            background: white;
+            padding: 20px;
+            margin-bottom: 15px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+        }        
+        .download-section {
+            background: white;
+            padding: 30px;
+            border-radius: 8px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            margin: 20px 0;
+            position: relative;
+        }
+        .btn-download, .btn-primary {
+            background: linear-gradient(145deg, #ff7f50 0%, #ff4500 100%);
+            border: 1px solid #ff4500;
+            color: white;
+            text-shadow: 0 1px 1px rgba(0,0,0,0.3);
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            animation: glow 1.5s infinite alternate;
+            position: absolute;
+            top: 30%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+        }
+        .btn-download:hover, .btn-primary:hover {
+            background: linear-gradient(145deg, #ff6347 0%, #ff0000 100%);
+            border: 1px solid #ff4500;
+            color: white;
+        }
+        .btn-outline-secondary {
+            border-color: #6e7070;
+            color: #6e7070;
+        }
+        .btn-outline-secondary:hover {
+            background: #6e7070;
+            color: white;
+        }
+        .btn-download {
+            padding: 15px 30px;
+            font-size: 1.2em;
+            margin: 20px 0;
+        }
+        .step-complete {
+            color: #27ae60;
+            margin-right: 10px;
+        }
+        @keyframes glow {
+            from {
+                box-shadow: 0 0 10px #ff4500, 0 0 20px #ff4500, 0 0 30px #ff4500, 0 0 40px #ff4500;
+            }
+            to {
+                box-shadow: 0 0 20px #ff6347, 0 0 30px #ff6347, 0 0 40px #ff6347, 0 0 50px #ff6347;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <img src="{{ url_for('img', path='smithforge_logo_white_small_v2.gif') }}" alt="SmithForge Logo" class="logo">
+        <h1 class="text-title">SmithForge</h1>
+        <h2 class="text-center h5 mb-4">WebUI Edition</h2>
+
+        <div class="download-section text-center">
+            <h2 class="h4 mb-4">Forging complete!</h2>
+            <img src="{{ url_for('img', path='smithforge_logo_white_small_v2.gif') }}" alt="SmithForge Logo" class="logo-large">
+            <a href="{{ download_url }}" class="btn btn-primary btn-lg btn-download" download>
+                <i class="fas fa-download"></i> Download forged model
+            </a>
+            <div class="text-center mt-4">
+                <a href="/" class="btn btn-outline-secondary">
+                    <i class="fas fa-plus"></i> New Forging
+                </a>
+                <form action="/" method="get" class="d-inline">
+                    <input type="hidden" name="hueforge_file" value="{{ hueforge_file }}">
+                    <input type="hidden" name="base_file" value="{{ base_file }}">
+                    <input type="hidden" name="output_name" value="{{ output_name }}">
+                    <input type="hidden" name="rotate_base" value="{{ rotate_base }}">
+                    {% if force_scale is not none %}
+                    <input type="hidden" name="force_scale" value="{{ force_scale }}">
+                    {% endif %}
+                    <input type="hidden" name="scaledown" value="{{ scaledown }}">
+                    {% if xshift is not none %}
+                    <input type="hidden" name="xshift" value="{{ xshift }}">
+                    {% endif %}
+                    {% if yshift is not none %}
+                    <input type="hidden" name="yshift" value="{{ yshift }}">
+                    {% endif %}
+                    {% if zshift is not none %}
+                    <input type="hidden" name="zshift" value="{{ zshift }}">
+                    {% endif %}
+                    <button type="submit" class="btn btn-outline-secondary">
+                        <i class="fas fa-redo"></i> Redo Forging
+                    </button>
+                </form>
+            </div>
+        </div>
+
+        <!-- Important Notes Section -->
+        <div class="note-section mt-4">
+            <h3><i class="fas fa-exclamation-circle"></i> Warning</h3>
+            <p class="text-danger">
+                Remember to lower height modifiers corresponding to the overlay embedding height (default 0.1mm). Each HueForge height modifier should be around 0.13mm less than the original HueForge description (with default Z shift).
+            </p>
+        </div>
+
+        <div class="log-window">
+            <div class="text-muted">Process Log:</div>
+            {% for line in log_lines %}
+                <i class="log-line">{{ line }}</i>
+            {% endfor %}
+        </div>
+
+        <footer class="text-center mt-4 mb-4">
+            <small class="text-muted">
+                <a href="https://github.com/S1N4X/SmithForge" target="_blank">
+                    <i class="fab fa-github"></i> GitHub Repository
+                </a>
+                &nbsp;|&nbsp;
+                Licensed under 
+                <a href="https://www.gnu.org/licenses/gpl-3.0" target="_blank">GPL-3.0</a>
+            </small>
+        </footer>
+    </div>
+</body>
+</html>

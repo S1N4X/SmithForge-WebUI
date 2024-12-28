@@ -1,0 +1,15 @@
+fastapi==0.103.2
+uvicorn==0.23.2
+jinja2==3.1.2
+python-multipart==0.0.20
+networkx==2.7.1
+lxml==4.6.3
+manifold3d==3.0.0
+
+trimesh==4.5.3
+shapely==2.0.6
+
+# Combined model image render
+# matplotlib==3.9.0
+# pyglet==1.5.21
+# pyopengl==3.1.5
