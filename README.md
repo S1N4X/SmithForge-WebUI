@@ -23,9 +23,9 @@ SmithForge WebUI is a web-based interface for the SmithForge tool, which allows 
 
 ## Installation
 
-1. Clone the repository:
+1. Clone the repository with submodules:
     ```bash
-    git clone https://github.com/yourusername/smithforge-webui.git
+    git clone --recurse-submodules https://github.com/yourusername/smithforge-webui.git
     cd smithforge-webui
     ```
 
