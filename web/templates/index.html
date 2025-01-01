@@ -121,7 +121,7 @@
                             <label class="required-label" for="base_template">Base Shape Model</label>
                             <div class="btn-group btn-group-toggle d-flex mt-1" data-toggle="buttons">
                                 <label class="btn btn-outline-secondary flex-fill active">
-                                    <input type="radio" name="base_template" id="base_template_default" value="default" autocomplete="off" checked> Existing available bases
+                                    <input type="radio" name="base_template" id="base_template_default" value="default" autocomplete="off" checked> Available bases
                                 </label>
                                 <label class="btn btn-outline-secondary flex-fill">
                                     <input type="radio" name="base_template" id="base_template_upload" value="upload" autocomplete="off"> Upload
@@ -130,7 +130,6 @@
                             <small class="help-text">Choose a default base model or upload your own</small>
                         </div>
                         <div class="form-group" id="default_base_group" style="display: {% if default_base_models %}block{% else %}none{% endif %};">
-                            <label for="default_base">Select a default base model</label>
                             <select name="default_base" id="default_base" class="form-control">
                                 {% if default_base_models %}
                                     {% for base_model in default_base_models %}
@@ -140,12 +139,9 @@
                                     <option value="" disabled>No default base models available</option>
                                 {% endif %}
                             </select>
-                            <small class="help-text">Choose a default base model from the list</small>
                         </div>
                         <div class="form-group" id="upload_base_group" style="display: none;">
-                            <label for="base_file">Upload Base Shape Model</label>
                             <input type="file" name="base_file" id="base_file" accept=".3mf" class="form-control" />
-                            <small class="help-text">The model to be used as the base</small>
                         </div>
                     </div>
 
