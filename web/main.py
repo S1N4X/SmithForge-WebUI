@@ -81,7 +81,7 @@ async def run_smithforge(
     xshift: float = Form(None),
     yshift: float = Form(None),
     zshift: float = Form(None),
-    #DEV: fill: float = Form(None),  # Change fill parameter to float
+    fill: float = Form(None),  # Change fill parameter to float
     #DEV: watertight: bool = Form(False) 
 ):
     """
@@ -162,9 +162,9 @@ async def run_smithforge(
     if zshift is not None:
         command += ["--zshift", str(zshift)]
 
-    #DEV: Add fill parameter to command if provided
-    #DEV: if fill is not None:
-    #DEV:    command += ["--fill", str(fill)]
+    # Add fill parameter to command if provided
+    if fill is not None:
+        command += ["--fill", str(fill)]
 
     #DEV: Add watertight parameter to command if checked
     #DEV:if watertight:
@@ -215,7 +215,7 @@ async def run_smithforge(
                 "xshift": xshift,
                 "yshift": yshift,
                 "zshift": zshift,
-                #DEV: "fill": fill 
+                "fill": fill 
             }
         )
     else:
