@@ -67,6 +67,27 @@
             height: auto;
             mix-blend-mode: multiply;
         }
+        .log-window {
+            background: #2c3e50;
+            color: #ecf0f1;
+            padding: 15px;
+            border-radius: 8px;
+            font-family: monospace;
+            white-space: pre-line;
+            max-height: 300px;
+            overflow-y: auto;
+            margin: 20px 0;
+            line-height: 1.2;
+        }
+        .terminal {
+            background: #1e1e1e;
+            color: #00ff00;
+            padding: 10px;
+            border-radius: 5px;
+            font-family: monospace;
+            white-space: pre-wrap;
+            overflow-x: auto;
+        }
     </style>
 </head>
 <body>
@@ -86,7 +107,10 @@
                     {{ error }}
                 </div>
             {% endif %}
-
+            <div class="log-window">
+                <div class="text-muted">Error Log:</div>
+                <pre class="terminal">{{ log }}</pre>
+            </div>
             <div class="mt-4">
                 <a href="/" class="btn btn-outline-secondary">
                     <i class="fas fa-plus"></i> New Forging

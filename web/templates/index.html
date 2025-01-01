@@ -118,8 +118,33 @@
                             <small class="help-text">The model to be placed on top</small>
                         </div>
                         <div class="form-group">
-                            <label class="required-label" for="base_file"> Base Shape Model</label>
-                            <input type="file" name="base_file" id="base_file" accept=".3mf" class="form-control" required />
+                            <label class="required-label" for="base_template">Base Shape Model</label>
+                            <div class="btn-group btn-group-toggle d-flex mt-1" data-toggle="buttons">
+                                <label class="btn btn-outline-secondary flex-fill active">
+                                    <input type="radio" name="base_template" id="base_template_default" value="default" autocomplete="off" checked> Existing available bases
+                                </label>
+                                <label class="btn btn-outline-secondary flex-fill">
+                                    <input type="radio" name="base_template" id="base_template_upload" value="upload" autocomplete="off"> Upload
+                                </label>
+                            </div>
+                            <small class="help-text">Choose a default base model or upload your own</small>
+                        </div>
+                        <div class="form-group" id="default_base_group" style="display: {% if default_base_models %}block{% else %}none{% endif %};">
+                            <label for="default_base">Select a default base model</label>
+                            <select name="default_base" id="default_base" class="form-control">
+                                {% if default_base_models %}
+                                    {% for base_model in default_base_models %}
+                                        <option value="{{ base_model }}" {% if loop.first %}selected{% endif %}>{{ base_model }}</option>
+                                    {% endfor %}
+                                {% else %}
+                                    <option value="" disabled>No default base models available</option>
+                                {% endif %}
+                            </select>
+                            <small class="help-text">Choose a default base model from the list</small>
+                        </div>
+                        <div class="form-group" id="upload_base_group" style="display: none;">
+                            <label for="base_file">Upload Base Shape Model</label>
+                            <input type="file" name="base_file" id="base_file" accept=".3mf" class="form-control" />
                             <small class="help-text">The model to be used as the base</small>
                         </div>
                     </div>
@@ -196,21 +221,31 @@
                             <small class="help-text">All measurements in millimeters<br>Leave empty for automatic positioning</small>
                         </div>
 
+<!-- DEV
                         <div class="optional-toggle mt-3" onclick="toggleSection('fill')">
                             <i class="fas fa-fill-drip"></i> Fill Options
                             <i class="fas fa-chevron-down float-right"></i>
                         </div>
-                        <div id="fill" class="optional-section">
+                         <div id="fill" class="optional-section">
                             <div class="form-group">
-                                <label for="fill">Fill Mode</label>
-                                <select name="fill" id="fill" class="form-control">
-                                    <option value="">None</option>
-                                    <option value="overlay-extrude">Overlay Extrude</option>
-                                    <option value="base-extrude">Base Extrude</option>
-                                </select>
-                                <small class="help-text">Choose how to fill the out-of-bounds region.</small>
+                                <label for="fill">Fill Thickness (mm)</label>
+                                <input type="number" step="0.1" name="fill" id="fill" class="form-control" placeholder="Enter fill thickness in mm">
+                                <small class="help-text">Specify the thickness for filling gaps in the final model</small>
+                            </div>
+                        </div> 
+
+                        <div class="optional-toggle mt-3" onclick="toggleSection('watertight')">
+                            <i class="fas fa-water"></i> Ensure Watertight
+                            <i class="fas fa-chevron-down float-right"></i>
+                        </div>
+                        <div id="watertight" class="optional-section">
+                            <div class="form-group form-check">
+                                <input type="checkbox" class="form-check-input" id="watertight" name="watertight">
+                                <label class="form-check-label" for="watertight">Ensure the final model is watertight</label>
+                                <small class="help-text">Fill holes to ensure the final mesh is watertight</small>
                             </div>
                         </div>
+-->
                     </div>
                 </div>
             </div>
@@ -263,6 +298,55 @@
         // Add event listeners for file inputs
         document.getElementById('base_file').addEventListener('change', updateOutputFilename);
         document.getElementById('hueforge_file').addEventListener('change', updateOutputFilename);
+
+        document.getElementById('default_base').addEventListener('change', function() {
+            if (this.value) {
+                document.getElementById('base_file').disabled = true;
+            } else {
+                document.getElementById('base_file').disabled = false;
+            }
+        });
+
+        document.querySelectorAll('input[name="base_template"]').forEach((elem) => {
+            elem.addEventListener('change', function() {
+                const defaultBaseGroup = document.getElementById('default_base_group');
+                const uploadBaseGroup = document.getElementById('upload_base_group');
+                const baseFileInput = document.getElementById('base_file');
+                const defaultBaseSelect = document.getElementById('default_base');
+
+                if (this.value === 'default') {
+                    if (defaultBaseSelect.options.length > 0) {
+                        defaultBaseGroup.style.display = 'block';
+                        uploadBaseGroup.style.display = 'none';
+                        baseFileInput.disabled = true;
+                        defaultBaseSelect.disabled = false;
+                        this.parentElement.classList.add('active');
+                        document.getElementById('base_template_upload').parentElement.classList.remove('active');
+                    } else {
+                        document.getElementById('base_template_upload').checked = true;
+                        document.getElementById('base_template_upload').dispatchEvent(new Event('change'));
+                    }
+                } else if (this.value === 'upload') {
+                    defaultBaseGroup.style.display = 'none';
+                    uploadBaseGroup.style.display = 'block';
+                    baseFileInput.disabled = false;
+                    defaultBaseSelect.disabled = true;
+                    this.parentElement.classList.add('active');
+                    document.getElementById('base_template_default').parentElement.classList.remove('active');
+                } else {
+                    defaultBaseGroup.style.display = 'none';
+                    uploadBaseGroup.style.display = 'none';
+                    baseFileInput.disabled = true;
+                    defaultBaseSelect.disabled = true;
+                }
+            });
+        });
+
+        // Automatically select "Upload" if no default base models are available
+        if (document.getElementById('default_base').options.length === 0) {
+            document.getElementById('base_template_upload').checked = true;
+            document.getElementById('base_template_upload').dispatchEvent(new Event('change'));
+        }
 
         document.querySelector('form').addEventListener('submit', function(e) {
             const btn = document.getElementById('submitBtn');

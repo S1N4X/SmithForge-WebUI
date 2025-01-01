@@ -10,8 +10,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy everything into the container
 COPY . .
 
-# Create input and output folders
-RUN mkdir inputs outputs
+# Create a directory for the outputs
+RUN mkdir -p outputs
 
 # Add health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \

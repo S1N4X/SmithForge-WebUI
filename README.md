@@ -12,7 +12,6 @@ SmithForge WebUI is a web-based interface for the SmithForge tool, which allows 
 - Upload and process 3MF models
 - Automatic scaling and positioning
 - Customizable rotation and shifts
-- Optional fill for out-of-bounds regions
 - Dockerized for easy deployment
 
 ## Requirements

@@ -12,18 +12,20 @@ app = FastAPI()
 
 # Define base paths
 INPUT_DIR = "inputs"
+BASES_DIR = "bases"
 OUTPUT_DIR = "outputs"
 STATIC_DIR = "static"
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 INPUT_PATH = os.path.join(APP_ROOT, "..", INPUT_DIR)
+BASES_PATH = os.path.join(APP_ROOT, "..", INPUT_DIR, BASES_DIR)
 OUTPUT_PATH = os.path.join(APP_ROOT, "..", OUTPUT_DIR)
 STATIC_PATH = os.path.join(APP_ROOT, STATIC_DIR)
 
 # Mount static files directory
 app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")
-# Add mounts for input and output directories
 app.mount("/inputs", StaticFiles(directory=INPUT_PATH), name="inputs")
 app.mount("/outputs", StaticFiles(directory=OUTPUT_PATH), name="outputs")
+app.mount("/bases", StaticFiles(directory=BASES_PATH), name="bases")
 
 templates = Jinja2Templates(directory="web/templates")
 
@@ -44,6 +46,7 @@ def get_form(
     Render the main HTML form that allows the user
     to specify all parameters and upload the .3mf files.
     """
+    default_base_models = [f for f in os.listdir(BASES_PATH) if f.endswith('.3mf')]  # Update path
     return templates.TemplateResponse("index.html", {
         "request": request,
         "hueforge_file": hueforge_file,
@@ -54,7 +57,8 @@ def get_form(
         "scaledown": scaledown,
         "xshift": xshift,
         "yshift": yshift,
-        "zshift": zshift
+        "zshift": zshift,
+        "default_base_models": default_base_models
     })
 
 def generate_output_filename(base_file: str, hueforge_file: str) -> str:
@@ -68,7 +72,8 @@ def generate_output_filename(base_file: str, hueforge_file: str) -> str:
 async def run_smithforge(
     request: Request,
     hueforge_file: UploadFile = File(...),
-    base_file: UploadFile = File(...),
+    base_file: UploadFile = File(None),
+    default_base: str = Form(None),  # Add default_base parameter
     output_name: str = Form(None),  # Change default to None
     rotate_base: int = Form(0),
     force_scale: float = Form(None),
@@ -76,7 +81,8 @@ async def run_smithforge(
     xshift: float = Form(None),
     yshift: float = Form(None),
     zshift: float = Form(None),
-    fill: str = Form(None)  # Add fill parameter
+    #DEV: fill: float = Form(None),  # Change fill parameter to float
+    #DEV: watertight: bool = Form(False) 
 ):
     """
     Receives the uploaded .3mf files and parameters from the form.
@@ -84,7 +90,8 @@ async def run_smithforge(
     """
     # Generate default output name if none provided
     if not output_name:
-        output_name = generate_output_filename(base_file.filename, hueforge_file.filename)
+        base_filename = base_file.filename if base_file else default_base
+        output_name = generate_output_filename(base_filename, hueforge_file.filename)
 
     # Ensure input and output directories exist
     os.makedirs(INPUT_PATH, exist_ok=True)
@@ -92,18 +99,41 @@ async def run_smithforge(
 
     # Save input files
     hueforge_path = os.path.join(INPUT_PATH, hueforge_file.filename)
-    base_path = os.path.join(INPUT_PATH, base_file.filename)
+    
+    # Handle base file path
+    if base_file and base_file.filename:
+        base_path = os.path.join(BASES_PATH, base_file.filename)
+        with open(base_path, "wb") as f:
+            f.write(await base_file.read())
+    elif default_base:
+        base_path = os.path.join(BASES_PATH, default_base)
+        if not os.path.exists(base_path):
+            return templates.TemplateResponse(
+                "error.html",
+                {
+                    "request": request,
+                    "error": "Selected base model not found",
+                    "log": f"File not found: {base_path}"
+                }
+            )
+    else:
+        return templates.TemplateResponse(
+            "error.html",
+            {
+                "request": request,
+                "error": "No base model provided",
+                "log": "Either upload a base file or select a default base model"
+            }
+        )
+
     output_path = os.path.join(OUTPUT_PATH, output_name)
 
     with open(hueforge_path, "wb") as f:
         f.write(await hueforge_file.read())
 
-    with open(base_path, "wb") as f:
-        f.write(await base_file.read())
-
-    # Generate result image path
-    result_image_name = f"{os.path.splitext(output_name)[0]}.png"
-    result_image_path = os.path.join(OUTPUT_PATH, result_image_name)
+    #DEV: Generate result image path
+    #DEV: result_image_name = f"{os.path.splitext(output_name)[0]}.png"
+    #DEV: result_image_path = os.path.join(OUTPUT_PATH, result_image_name)
 
     # 3) Construct the command for main_script.py
     command = [
@@ -132,9 +162,13 @@ async def run_smithforge(
     if zshift is not None:
         command += ["--zshift", str(zshift)]
 
-    # Add fill parameter to command if provided
-    if fill:
-        command += ["--fill", fill]
+    #DEV: Add fill parameter to command if provided
+    #DEV: if fill is not None:
+    #DEV:    command += ["--fill", str(fill)]
+
+    #DEV: Add watertight parameter to command if checked
+    #DEV:if watertight:
+    #DEV:    command.append("--watertight")
 
     # 4) Run the command with subprocess
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
@@ -163,7 +197,7 @@ async def run_smithforge(
                         log_lines.append(line)
 
         result["output_file"] = output_path
-        result_image_url = f"/outputs/{result_image_name}"
+        #DEV: result_image_url = f"/outputs/{result_image_name}"
         return templates.TemplateResponse(
             "result.html",
             {
@@ -171,9 +205,9 @@ async def run_smithforge(
                 "result": result,
                 "log_lines": log_lines,
                 "download_url": f"/outputs/{output_name}",  # Updated path
-                "result_image_url": result_image_url,  # Add result image URL
+                #DEV: "result_image_url": result_image_url,  # Add result image URL
                 "hueforge_file": hueforge_file.filename,
-                "base_file": base_file.filename,
+                "base_file": base_file.filename if base_file else default_base,
                 "output_name": output_name,
                 "rotate_base": rotate_base,
                 "force_scale": force_scale,
@@ -181,7 +215,7 @@ async def run_smithforge(
                 "xshift": xshift,
                 "yshift": yshift,
                 "zshift": zshift,
-                "fill": fill  # Pass fill parameter to template
+                #DEV: "fill": fill 
             }
         )
     else:
@@ -193,7 +227,8 @@ async def run_smithforge(
             "error.html",
             {
                 "request": request,
-                "error": error_message
+                "error": error_message,
+                "log": result["stderr"]  # Pass the stderr log to the template
             }
         )
 
