@@ -4,6 +4,7 @@
     <title>SmithForge WebUI</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <!-- <link href="{{ url_for('static', path='style.css') }}" rel="stylesheet"> -->
     <style>
         body {
             background: #f8f9fa;
@@ -101,7 +102,7 @@
 </head>
 <body>
     <div class="main-container">
-        <img src="{{ url_for('img', path='smithforge_logo_white_small_v2.gif') }}" alt="SmithForge Logo" class="logo">
+        <img src="{{ url_for('static', path='smithforge_logo_white_small_v2.gif') }}" alt="SmithForge Logo" class="logo">
         <h1 class="text-title">SmithForge</h1>
         <h2 class="text-center h5 mb-4">WebUI Edition</h2>
         
@@ -193,6 +194,22 @@
                                 </div>
                             </div>
                             <small class="help-text">All measurements in millimeters<br>Leave empty for automatic positioning</small>
+                        </div>
+
+                        <div class="optional-toggle mt-3" onclick="toggleSection('fill')">
+                            <i class="fas fa-fill-drip"></i> Fill Options
+                            <i class="fas fa-chevron-down float-right"></i>
+                        </div>
+                        <div id="fill" class="optional-section">
+                            <div class="form-group">
+                                <label for="fill">Fill Mode</label>
+                                <select name="fill" id="fill" class="form-control">
+                                    <option value="">None</option>
+                                    <option value="overlay-extrude">Overlay Extrude</option>
+                                    <option value="base-extrude">Base Extrude</option>
+                                </select>
+                                <small class="help-text">Choose how to fill the out-of-bounds region.</small>
+                            </div>
                         </div>
                     </div>
                 </div>

@@ -13,12 +13,14 @@ app = FastAPI()
 # Define base paths
 INPUT_DIR = "inputs"
 OUTPUT_DIR = "outputs"
+STATIC_DIR = "static"
 APP_ROOT = os.path.dirname(os.path.abspath(__file__))
 INPUT_PATH = os.path.join(APP_ROOT, "..", INPUT_DIR)
 OUTPUT_PATH = os.path.join(APP_ROOT, "..", OUTPUT_DIR)
+STATIC_PATH = os.path.join(APP_ROOT, STATIC_DIR)
 
 # Mount static files directory
-app.mount("/img", StaticFiles(directory=os.path.abspath("/app/smithforge/img/")), name="img")
+app.mount("/static", StaticFiles(directory=STATIC_PATH), name="static")
 # Add mounts for input and output directories
 app.mount("/inputs", StaticFiles(directory=INPUT_PATH), name="inputs")
 app.mount("/outputs", StaticFiles(directory=OUTPUT_PATH), name="outputs")
@@ -74,6 +76,7 @@ async def run_smithforge(
     xshift: float = Form(None),
     yshift: float = Form(None),
     zshift: float = Form(None),
+    fill: str = Form(None)  # Add fill parameter
 ):
     """
     Receives the uploaded .3mf files and parameters from the form.
@@ -129,6 +132,10 @@ async def run_smithforge(
     if zshift is not None:
         command += ["--zshift", str(zshift)]
 
+    # Add fill parameter to command if provided
+    if fill:
+        command += ["--fill", fill]
+
     # 4) Run the command with subprocess
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
@@ -173,15 +180,20 @@ async def run_smithforge(
                 "scaledown": scaledown,
                 "xshift": xshift,
                 "yshift": yshift,
-                "zshift": zshift
+                "zshift": zshift,
+                "fill": fill  # Pass fill parameter to template
             }
         )
     else:
+        error_message = "An error occurred during processing"
+        if "Not all meshes are volumes" in result["stderr"]:
+            error_message = "not watertight"
+
         return templates.TemplateResponse(
             "error.html",
             {
                 "request": request,
-                "error": result["stderr"] or "An error occurred during processing"
+                "error": error_message
             }
         )
 

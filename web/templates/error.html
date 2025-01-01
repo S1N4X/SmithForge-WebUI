@@ -4,9 +4,18 @@
     <title>SmithForge - Error</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <!-- <link href="{{ url_for('static', path='style.css') }}" rel="stylesheet"> -->
     <style>
         body { background: #f8f9fa; padding: 20px; }
         .main-container { max-width: 800px; margin: 0 auto; }
+        .text-title {
+            font-family: 'Merriweather', serif;
+            text-shadow: 1px 1px 2px #2c2c2c;
+            font-weight: bold;
+            text-align: center;
+            margin-top: 0px;
+            margin-bottom: 0px;
+        }
         .logo {
             max-width: 150px;
             margin: 0 auto 20px;
@@ -45,23 +54,42 @@
             background: linear-gradient(145deg, #7a7c7c 0%, #4f5050 100%);
             color: white;
         }
+        .btn-outline-secondary {
+            border-color: #6e7070;
+            color: #6e7070;
+        }
+        .btn-outline-secondary:hover {
+            background: #6e7070;
+            color: white;
+        }
+        .img-fluid {
+            max-width: 20%;
+            height: auto;
+            mix-blend-mode: multiply;
+        }
     </style>
 </head>
 <body>
     <div class="main-container">
-        <img src="{{ url_for('img', path='smithforge_logo_white_small_v2.gif') }}" alt="SmithForge Logo" class="logo">
+        <img src="{{ url_for('static', path='smithforge_logo_white_small_v2.gif') }}" alt="SmithForge Logo" class="logo">
+        <h1 class="text-title">SmithForge</h1>
+        <h2 class="text-center h5 mb-4">WebUI Edition</h2>
         
         <div class="error-section text-center">
-            <i class="fas fa-exclamation-triangle error-icon"></i>
-            <h1 class="h3 mb-4">Forging Failed</h1>
-            
-            <div class="error-message text-left">
-                {{ error }}
-            </div>
+            {% if "not watertight" in error %}
+                <img src="{{ url_for('static', path='meshleaking.png') }}" alt="Mesh Leaking" class="img-fluid mt-3">
+                <div class="error-message text-left">The two meshes are not watertight when combined. Verify that the source meshes are watertight or try a deeper embedding (Z axis).</div>
+            {% else %}
+                <i class="fas fa-exclamation-triangle error-icon"></i>
+                <h1 class="h3 mb-4">Forging Failed</h1>
+                <div class="error-message text-left">
+                    {{ error }}
+                </div>
+            {% endif %}
 
             <div class="mt-4">
-                <a href="/" class="btn btn-outline-primary btn-lg">
-                    <i class="fas fa-redo"></i> Try Again
+                <a href="/" class="btn btn-outline-secondary">
+                    <i class="fas fa-plus"></i> New Forging
                 </a>
             </div>
         </div>

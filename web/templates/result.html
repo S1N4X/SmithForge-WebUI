@@ -4,6 +4,7 @@
     <title>SmithForge - Forging complete</title>
     <link href="https://stackpath.bootstrapcdn.com/bootstrap/4.5.2/css/bootstrap.min.css" rel="stylesheet">
     <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/5.15.4/css/all.min.css" rel="stylesheet">
+    <!-- <link href="{{ url_for('static', path='style.css') }}" rel="stylesheet"> -->
     <style>
         body { background: #f8f9fa; padding: 20px; }
         .main-container { max-width: 1000px; margin: 0 auto; }
@@ -119,13 +120,13 @@
 </head>
 <body>
     <div class="main-container">
-        <img src="{{ url_for('img', path='smithforge_logo_white_small_v2.gif') }}" alt="SmithForge Logo" class="logo">
+        <img src="{{ url_for('static', path='smithforge_logo_white_small_v2.gif') }}" alt="SmithForge Logo" class="logo">
         <h1 class="text-title">SmithForge</h1>
         <h2 class="text-center h5 mb-4">WebUI Edition</h2>
 
         <div class="download-section text-center">
             <h2 class="h4 mb-4">Forging complete!</h2>
-            <img src="{{ url_for('img', path='smithforge_logo_white_small_v2.gif') }}" alt="SmithForge Logo" class="logo-large">
+            <img src="{{ url_for('static', path='smithforge_logo_white_small_v2.gif') }}" alt="SmithForge Logo" class="logo-large">
             <a href="{{ download_url }}" class="btn btn-primary btn-lg btn-download" download>
                 <i class="fas fa-download"></i> Download forged model
             </a>
@@ -150,6 +151,9 @@
                     {% endif %}
                     {% if zshift is not none %}
                     <input type="hidden" name="zshift" value="{{ zshift }}">
+                    {% endif %}
+                    {% if fill is not none %}
+                    <input type="hidden" name="fill" value="{{ fill }}">
                     {% endif %}
                     <button type="submit" class="btn btn-outline-secondary">
                         <i class="fas fa-redo"></i> Redo Forging

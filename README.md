@@ -1,6 +1,5 @@
-
 <p align="center">
-  <img src="img/smithforge_logo_white_small_v2.gif" alt="SmithForge Logo">
+  <img src="web/static/smithforge_logo_white_small_v2.gif" alt="SmithForge Logo">
 </p>
 
 # SmithForge: WebUI Edition
@@ -13,6 +12,7 @@ SmithForge WebUI is a web-based interface for the SmithForge tool, which allows 
 - Upload and process 3MF models
 - Automatic scaling and positioning
 - Customizable rotation and shifts
+- Optional fill for out-of-bounds regions
 - Dockerized for easy deployment
 
 ## Requirements
@@ -50,7 +50,6 @@ SmithForge WebUI is a web-based interface for the SmithForge tool, which allows 
 3. Configure the optional settings as needed.
 4. Click "Start Forging" to process the models.
 5. Download the combined 3MF model once the process is complete.
-
 
 ## License
 
