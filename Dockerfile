@@ -13,10 +13,15 @@ COPY . .
 # Create a directory for the outputs
 RUN mkdir -p outputs
 
+# Web server
+EXPOSE 8000
+CMD ["uvicorn", "web.main:app", "--host", "0.0.0.0", "--port", "8000"]
+
+# Labels (for Unraid)
+LABEL com.docker.compose.project="smithforge"
+LABEL com.docker.compose.service="web"
+LABEL com.docker.compose.version="1.0"
+
 # Add health check
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
   CMD curl --fail http://localhost:8000/health || exit 1
-
-EXPOSE 8000
-
-CMD ["uvicorn", "web.main:app", "--host", "0.0.0.0", "--port", "8000"]

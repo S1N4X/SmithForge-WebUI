@@ -1,0 +1,33 @@
+version: '3.8'
+
+services:
+  web:
+    image: smithforge:latest
+    build:
+      context: https://github.com/S1N4X/SmithForge-WebUI.git#main
+      dockerfile: Dockerfile
+    container_name: smithforge_web
+    ports:
+      - "${PORT:-8000}:8000"
+    volumes:
+      - "${APPDATA:-./outputs}:/app/outputs"
+    environment:
+      - PYTHONUNBUFFERED=1
+      - PUID=${PUID:-99}
+      - PGID=${PGID:-100}
+      - TZ=${TZ:-Etc/UTC}
+      - UMASK=${UMASK:-022}
+    restart: unless-stopped
+    healthcheck:
+      test: ["CMD", "curl", "--fail", "http://localhost:8000/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
+    labels:
+      - "com.docker.compose.project=smithforge"
+      - "com.docker.compose.service=web"
+      - "com.docker.compose.version=1.0"
+      - "net.unraid.docker.webui=http://[IP]:[PORT:8000]"
+      - "net.unraid.docker.shell=/bin/bash"
+      - "net.unraid.docker.icon=https://raw.githubusercontent.com/S1N4X/SmithForge/main/img/smithforge_logo_white_small_v2.gif"
+      - "net.unraid.docker.description=SmithForge is a tool for seamlessly combining two 3MF models by overlaying and embedding a Hueforge model onto a base shape with automatic scaling, positioning, and precise intersection alignment."
