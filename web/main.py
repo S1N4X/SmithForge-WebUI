@@ -70,6 +70,13 @@ def generate_output_filename(base_file: str, hueforge_file: str) -> str:
 
 def ensure_3mf_extension(filename: str) -> str:
     """Ensure the filename has a .3mf extension."""
+    if not filename:
+        return "output.3mf"
+
+    # Strip any whitespace
+    filename = filename.strip()
+
+    # Check if it already has .3mf extension (case insensitive)
     if not filename.lower().endswith('.3mf'):
         return f"{filename}.3mf"
     return filename
@@ -98,8 +105,9 @@ async def run_smithforge(
     if not output_name:
         base_filename = base_file.filename if base_file else default_base
         output_name = generate_output_filename(base_filename, hueforge_file.filename)
-    else:
-        output_name = ensure_3mf_extension(output_name)
+
+    # Always ensure .3mf extension is present
+    output_name = ensure_3mf_extension(output_name)
 
     # Ensure input and output directories exist
     os.makedirs(INPUT_PATH, exist_ok=True)
