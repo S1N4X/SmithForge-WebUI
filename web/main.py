@@ -40,7 +40,8 @@ def get_form(
     scaledown: bool = False,
     xshift: float = None,
     yshift: float = None,
-    zshift: float = None
+    zshift: float = None,
+    preserve_colors: bool = True
 ):
     """
     Render the main HTML form that allows the user
@@ -58,6 +59,7 @@ def get_form(
         "xshift": xshift,
         "yshift": yshift,
         "zshift": zshift,
+        "preserve_colors": preserve_colors,
         "default_base_models": default_base_models
     })
 
@@ -94,8 +96,9 @@ async def run_smithforge(
     xshift: float = Form(None),
     yshift: float = Form(None),
     zshift: float = Form(None),
+    preserve_colors: bool = Form(True),  # Default to True (enabled)
     #DEV: fill: float = Form(None),  # Change fill parameter to float
-    #DEV: watertight: bool = Form(False) 
+    #DEV: watertight: bool = Form(False)
 ):
     """
     Receives the uploaded .3mf files and parameters from the form.
@@ -170,6 +173,10 @@ async def run_smithforge(
     if scaledown:
         command.append("--scaledown")
 
+    # If preserve_colors is checked, pass the --preserve-colors flag
+    if preserve_colors:
+        command.append("--preserve-colors")
+
     # Pass xshift, yshift, zshift only if they are set
     if xshift is not None:
         command += ["--xshift", str(xshift)]
@@ -231,7 +238,8 @@ async def run_smithforge(
                 "xshift": xshift,
                 "yshift": yshift,
                 "zshift": zshift,
-                #DEV: "fill": fill 
+                "preserve_colors": preserve_colors,
+                #DEV: "fill": fill
             }
         )
     else:
