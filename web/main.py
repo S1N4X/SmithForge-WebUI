@@ -173,7 +173,7 @@ async def run_smithforge(
 
     # 3) Construct the command for main_script.py
     command = [
-        "python", 
+        "python3",  # Use python3 explicitly for compatibility
         "smithforge/smithforge.py",
         "--hueforge", hueforge_path,
         "--base", base_path,
