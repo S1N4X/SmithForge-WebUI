@@ -29,6 +29,18 @@ app.mount("/bases", StaticFiles(directory=BASES_PATH), name="bases")
 
 templates = Jinja2Templates(directory="web/templates")
 
+def parse_optional_float(value: str) -> float | None:
+    """
+    Parse an optional float from form data.
+    Converts empty strings to None, otherwise attempts to parse as float.
+    """
+    if value is None or value == "" or (isinstance(value, str) and value.strip() == ""):
+        return None
+    try:
+        return float(value)
+    except (ValueError, TypeError):
+        return None
+
 @app.get("/", response_class=HTMLResponse)
 def get_form(
     request: Request,
@@ -91,11 +103,11 @@ async def run_smithforge(
     default_base: str = Form(None),  # Add default_base parameter
     output_name: str = Form(None),  # Change default to None
     rotate_base: int = Form(0),
-    force_scale: float = Form(None),
+    force_scale: str = Form(""),  # Accept as string, parse later
     scaledown: bool = Form(False),
-    xshift: float = Form(None),
-    yshift: float = Form(None),
-    zshift: float = Form(None),
+    xshift: str = Form(""),  # Accept as string, parse later
+    yshift: str = Form(""),  # Accept as string, parse later
+    zshift: str = Form(""),  # Accept as string, parse later
     preserve_colors: bool = Form(True),  # Default to True (enabled)
     #DEV: fill: float = Form(None),  # Change fill parameter to float
     #DEV: watertight: bool = Form(False)
@@ -104,6 +116,11 @@ async def run_smithforge(
     Receives the uploaded .3mf files and parameters from the form.
     Then invokes the Python script with subprocess, returning stdout & stderr.
     """
+    # Parse optional float fields
+    force_scale_val = parse_optional_float(force_scale)
+    xshift_val = parse_optional_float(xshift)
+    yshift_val = parse_optional_float(yshift)
+    zshift_val = parse_optional_float(zshift)
     # Generate default output name if none provided
     if not output_name:
         base_filename = base_file.filename if base_file else default_base
@@ -166,8 +183,8 @@ async def run_smithforge(
     ]
 
     # If user provided a force_scale value, pass it
-    if force_scale is not None:
-        command += ["--scale", str(force_scale)]
+    if force_scale_val is not None:
+        command += ["--scale", str(force_scale_val)]
 
     # If scaledown is checked, pass the --scaledown flag
     if scaledown:
@@ -178,12 +195,12 @@ async def run_smithforge(
         command.append("--preserve-colors")
 
     # Pass xshift, yshift, zshift only if they are set
-    if xshift is not None:
-        command += ["--xshift", str(xshift)]
-    if yshift is not None:
-        command += ["--yshift", str(yshift)]
-    if zshift is not None:
-        command += ["--zshift", str(zshift)]
+    if xshift_val is not None:
+        command += ["--xshift", str(xshift_val)]
+    if yshift_val is not None:
+        command += ["--yshift", str(yshift_val)]
+    if zshift_val is not None:
+        command += ["--zshift", str(zshift_val)]
 
     #DEV: Add fill parameter to command if provided
     #DEV: if fill is not None:
@@ -233,11 +250,11 @@ async def run_smithforge(
                 "base_file": base_file.filename if base_file else default_base,
                 "output_name": output_name,
                 "rotate_base": rotate_base,
-                "force_scale": force_scale,
+                "force_scale": force_scale_val,
                 "scaledown": scaledown,
-                "xshift": xshift,
-                "yshift": yshift,
-                "zshift": zshift,
+                "xshift": xshift_val,
+                "yshift": yshift_val,
+                "zshift": zshift_val,
                 "preserve_colors": preserve_colors,
                 #DEV: "fill": fill
             }
