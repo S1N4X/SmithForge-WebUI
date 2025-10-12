@@ -3,6 +3,7 @@ from fastapi import FastAPI, Request, UploadFile, File, Form
 from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
+from typing import Optional
 import uvicorn
 import subprocess
 import os
@@ -29,7 +30,7 @@ app.mount("/bases", StaticFiles(directory=BASES_PATH), name="bases")
 
 templates = Jinja2Templates(directory="web/templates")
 
-def parse_optional_float(value: str) -> float | None:
+def parse_optional_float(value: str) -> Optional[float]:
     """
     Parse an optional float from form data.
     Converts empty strings to None, otherwise attempts to parse as float.
