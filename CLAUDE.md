@@ -70,6 +70,7 @@ The `modify_3mf()` function performs these operations in sequence:
   - `main.py` - FastAPI routes and subprocess orchestration
   - `templates/` - Jinja2 HTML templates (index, result, error)
   - `static/` - CSS and static assets
+    - `presets.js` - Parameter presets management (localStorage)
 - `SmithForge/` - Core processing submodule
   - `smithforge.py` - Main 3D model manipulation script
 - `inputs/` - Uploaded Hueforge files (created at runtime)
@@ -96,6 +97,43 @@ The `modify_3mf()` function performs these operations in sequence:
 - **"Not all meshes are volumes" error**: Input models are not watertight/manifold. This error is caught and displayed in error.html (web/main.py:231)
 - **Empty intersection**: Occurs when there's no overlap between models or when base is not a valid volume
 - **Path issues**: The web server uses relative paths from project root, subprocess calls use paths relative to working directory
+
+## Frontend Features
+
+### Parameter Presets (web/static/presets.js)
+Allows users to save, load, and delete parameter configurations using browser localStorage.
+
+**Storage Format:**
+```javascript
+{
+  "presetName": {
+    rotate_base: "90",
+    force_scale: "1.2",
+    scaledown: true,
+    xshift: "5.0",
+    yshift: "10.0",
+    zshift: "0.5",
+    preserve_colors: true,
+    output_name: "custom_output",
+    base_template: "default",
+    default_base: "coaster.3mf"
+  }
+}
+```
+
+**Key Functions:**
+- `savePreset()` - Serializes current form state to localStorage
+- `loadPreset()` - Applies saved parameters to form fields
+- `deletePreset()` - Removes preset from localStorage
+- `getAllPresets()` - Retrieves all saved presets
+- `populatePresetDropdown()` - Updates UI with available presets
+
+**Storage Key:** `smithforge_presets` in localStorage
+
+**Limitations:**
+- Presets are browser-specific (not synced across devices)
+- Subject to localStorage size limits (~5-10MB depending on browser)
+- Cleared if user clears browser data
 
 ## Technology Stack
 - **Backend**: FastAPI + Uvicorn

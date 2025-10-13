@@ -12,6 +12,7 @@ SmithForge WebUI is a web-based interface for the SmithForge tool, which allows 
 - Upload and process 3MF models
 - Automatic scaling and positioning
 - Customizable rotation and shifts
+- **Parameter Presets** - Save and load your favorite parameter combinations
 - Dockerized for easy deployment
 
 ## Requirements
@@ -49,6 +50,42 @@ SmithForge WebUI is a web-based interface for the SmithForge tool, which allows 
 3. Configure the optional settings as needed.
 4. Click "Start Forging" to process the models.
 5. Download the combined 3MF model once the process is complete.
+
+## Parameter Presets
+
+Parameter Presets allow you to save and reuse your frequently-used parameter combinations, making it faster to work with similar projects.
+
+### Saving a Preset
+
+1. Configure all your desired parameters (rotation, scaling, shifts, etc.)
+2. Enter a name for your preset in the "Save Current Settings" field
+3. Click the "Save Preset" button
+4. Your preset is now saved in your browser's local storage
+
+### Loading a Preset
+
+1. Select a preset from the "Load Saved Preset" dropdown
+2. Click the "Load" button
+3. All form fields will be populated with the saved values
+
+### Deleting a Preset
+
+1. Select a preset from the "Load Saved Preset" dropdown
+2. Click the "Delete" button
+3. Confirm the deletion
+
+### What Gets Saved
+
+Presets save the following parameters:
+- Base rotation angle
+- Force scale value
+- Scale down permission
+- X, Y, Z position shifts
+- Color preservation setting
+- Output filename template
+- Base template selection (default bases or upload)
+
+**Note:** Presets are stored locally in your browser using localStorage. They will persist between sessions but are not synced across different browsers or devices.
 
 ## License
 
