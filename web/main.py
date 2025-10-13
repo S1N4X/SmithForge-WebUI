@@ -1,12 +1,14 @@
 # web/main.py
 from fastapi import FastAPI, Request, UploadFile, File, Form
-from fastapi.responses import HTMLResponse, FileResponse, JSONResponse
+from fastapi.responses import HTMLResponse, FileResponse, JSONResponse, Response
 from fastapi.templating import Jinja2Templates
 from fastapi.staticfiles import StaticFiles
 from typing import Optional
 import uvicorn
 import subprocess
 import os
+import tempfile
+import trimesh
 from datetime import datetime
 
 app = FastAPI()
@@ -75,6 +77,67 @@ def get_form(
         "preserve_colors": preserve_colors,
         "default_base_models": default_base_models
     })
+
+@app.post("/preview-model")
+async def preview_model(file: UploadFile = File(...)):
+    """
+    Convert uploaded 3MF file to GLB format for Three.js preview.
+    Returns the GLB file as binary data.
+    """
+    try:
+        # Create temporary file for the upload
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.3mf') as tmp_input:
+            content = await file.read()
+            tmp_input.write(content)
+            tmp_input_path = tmp_input.name
+
+        # Load the 3MF file with trimesh
+        mesh = trimesh.load(tmp_input_path, file_type='3mf')
+
+        # If it's a scene with multiple meshes, combine them
+        if isinstance(mesh, trimesh.Scene):
+            # Get all geometries and combine them
+            meshes = []
+            for node_name in mesh.graph.nodes_geometry:
+                transform = mesh.graph.get(node_name)[0]
+                geometry = mesh.geometry[mesh.graph[node_name][0]]
+                meshes.append(geometry.apply_transform(transform))
+            if meshes:
+                mesh = trimesh.util.concatenate(meshes)
+            else:
+                # Use the first geometry if available
+                if len(mesh.geometry) > 0:
+                    mesh = list(mesh.geometry.values())[0]
+
+        # Create temporary file for GLB export
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.glb') as tmp_output:
+            tmp_output_path = tmp_output.name
+
+        # Export as GLB
+        mesh.export(tmp_output_path, file_type='glb')
+
+        # Read the GLB file
+        with open(tmp_output_path, 'rb') as f:
+            glb_content = f.read()
+
+        # Cleanup temporary files
+        os.unlink(tmp_input_path)
+        os.unlink(tmp_output_path)
+
+        # Return GLB file
+        return Response(
+            content=glb_content,
+            media_type='model/gltf-binary',
+            headers={
+                'Content-Disposition': f'inline; filename="{file.filename}.glb"'
+            }
+        )
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Failed to convert model: {str(e)}"}
+        )
 
 def generate_output_filename(base_file: str, hueforge_file: str) -> str:
     """Generate a default output filename from input files."""

@@ -105,7 +105,74 @@
         <img src="{{ url_for('static', path='smithforge_logo_white_small_v2.gif') }}" alt="SmithForge Logo" class="logo">
         <h1 class="text-title">SmithForge</h1>
         <h2 class="text-center h5 mb-4">WebUI Edition</h2>
-        
+
+        <!-- 3D Model Preview Section -->
+        <div class="form-section">
+            <h3><i class="fas fa-cube"></i> 3D Model Preview</h3>
+            <div class="row">
+                <div class="col-md-9">
+                    <div id="model-viewer-container" style="width: 100%; height: 500px; background: #f0f0f0; border-radius: 8px; position: relative;">
+                        <div style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); text-align: center; color: #999;">
+                            <i class="fas fa-cube fa-3x mb-3"></i>
+                            <p>Upload models to see preview</p>
+                        </div>
+                    </div>
+                </div>
+                <div class="col-md-3">
+                    <div class="mb-3">
+                        <label class="font-weight-bold">View Mode</label>
+                        <div class="btn-group-vertical d-flex" role="group">
+                            <button type="button" class="btn btn-outline-secondary view-mode-btn active" data-mode="both">
+                                <i class="fas fa-layer-group"></i> Both
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary view-mode-btn" data-mode="base">
+                                <i class="fas fa-th-large"></i> Base Only
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary view-mode-btn" data-mode="overlay">
+                                <i class="fas fa-image"></i> Overlay Only
+                            </button>
+                        </div>
+                    </div>
+                    <div class="mb-3">
+                        <div class="form-check">
+                            <input type="checkbox" class="form-check-input" id="wireframeToggle">
+                            <label class="form-check-label" for="wireframeToggle">
+                                Wireframe Mode
+                            </label>
+                        </div>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <label class="font-weight-bold">Base Model</label>
+                        <div id="base-loading" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i> Loading...
+                        </div>
+                        <small class="d-block text-muted">
+                            Dimensions: <span id="base-dimensions">-</span>
+                        </small>
+                        <small class="d-block text-muted">
+                            Volume: <span id="base-volume">-</span>
+                        </small>
+                    </div>
+                    <div class="mb-3">
+                        <label class="font-weight-bold">Overlay Model</label>
+                        <div id="overlay-loading" style="display: none;">
+                            <i class="fas fa-spinner fa-spin"></i> Loading...
+                        </div>
+                        <small class="d-block text-muted">
+                            Dimensions: <span id="overlay-dimensions">-</span>
+                        </small>
+                        <small class="d-block text-muted">
+                            Volume: <span id="overlay-volume">-</span>
+                        </small>
+                    </div>
+                </div>
+            </div>
+            <small class="help-text">
+                <i class="fas fa-info-circle"></i> Models will appear here when you upload files. Use mouse to rotate (left click), pan (right click), and zoom (scroll).
+            </small>
+        </div>
+
         <form action="/run-smithforge" method="post" enctype="multipart/form-data">
             <div class="row">
                 <!-- Left Column - Required Fields -->
@@ -363,5 +430,13 @@
             btn.innerHTML = '<i class="fas fa-fire"></i> Forging...';
         });
     </script>
+
+    <!-- Three.js and dependencies -->
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/build/three.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/controls/OrbitControls.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/three@0.160.0/examples/js/loaders/GLTFLoader.js"></script>
+
+    <!-- 3D Viewer Script -->
+    <script src="{{ url_for('static', path='viewer.js') }}"></script>
 </body>
 </html>

@@ -70,6 +70,7 @@ The `modify_3mf()` function performs these operations in sequence:
   - `main.py` - FastAPI routes and subprocess orchestration
   - `templates/` - Jinja2 HTML templates (index, result, error)
   - `static/` - CSS and static assets
+    - `viewer.js` - Three.js 3D model viewer
 - `SmithForge/` - Core processing submodule
   - `smithforge.py` - Main 3D model manipulation script
 - `inputs/` - Uploaded Hueforge files (created at runtime)
@@ -97,9 +98,56 @@ The `modify_3mf()` function performs these operations in sequence:
 - **Empty intersection**: Occurs when there's no overlap between models or when base is not a valid volume
 - **Path issues**: The web server uses relative paths from project root, subprocess calls use paths relative to working directory
 
+## Frontend Features
+
+### 3D Model Preview (web/static/viewer.js)
+Interactive 3D visualization of uploaded models using Three.js.
+
+**Architecture:**
+```
+User uploads 3MF → /preview-model endpoint → trimesh converts to GLB →
+Returns binary GLB → Three.js GLTFLoader → Renders in WebGL canvas
+```
+
+**Preview Endpoint** (`/preview-model` in web/main.py):
+- Accepts uploaded 3MF file via POST
+- Loads with trimesh and handles Scene vs single Mesh
+- Exports to GLB format (binary glTF)
+- Returns GLB as `model/gltf-binary` MIME type
+- Automatic cleanup of temporary files
+
+**Viewer Components:**
+- **Scene Setup**: Three.js scene with perspective camera, OrbitControls
+- **Lighting**: Ambient + two directional lights for proper model illumination
+- **Materials**: Base (gray, opaque), Overlay (blue, 85% opacity)
+- **Grid Helper**: 200mm grid for scale reference
+- **View Modes**: Both/Base Only/Overlay Only visibility toggles
+- **Wireframe Mode**: Toggle mesh wireframe view
+
+**Key Functions:**
+- `initViewer()` - Initialize Three.js scene and controls
+- `loadModel(file, modelType)` - Upload to /preview-model and load GLB
+- `centerCamera()` - Auto-frame camera on loaded models
+- `calculateVolume(model)` - Approximate volume from bounding boxes
+- `setViewMode(mode)` - Control model visibility
+- `toggleWireframe()` - Switch between solid and wireframe rendering
+
+**Model Information Display:**
+- Dimensions (X × Y × Z in mm) from bounding box
+- Approximate volume (mm³)
+- Loading indicators during conversion
+- Real-time updates on file selection
+
+**Integration:**
+- Hooks into existing file input change events
+- Loads default bases from `/bases/` endpoint
+- Fully client-side rendering after initial GLB fetch
+- No server state - stateless preview generation
+
 ## Technology Stack
 - **Backend**: FastAPI + Uvicorn
 - **3D Processing**: trimesh, shapely, manifold3d
-- **Frontend**: Bootstrap 4, Font Awesome, vanilla JavaScript
+- **Frontend**: Bootstrap 4, Font Awesome, Three.js (r160), vanilla JavaScript
+- **3D Rendering**: Three.js with WebGL, OrbitControls, GLTFLoader
 - **Templating**: Jinja2
 - **Containerization**: Docker + Docker Compose (Python 3.9-slim base)
