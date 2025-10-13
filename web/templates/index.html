@@ -217,6 +217,18 @@
                             <small class="help-text">All measurements in millimeters<br>Leave empty for automatic positioning</small>
                         </div>
 
+                        <div class="optional-toggle mt-3" onclick="toggleSection('colors')">
+                            <i class="fas fa-palette"></i>  Color preservation
+                            <i class="fas fa-chevron-down float-right"></i>
+                        </div>
+                        <div id="colors" class="optional-section">
+                            <div class="form-group form-check">
+                                <input type="checkbox" class="form-check-input" id="preserve_colors" name="preserve_colors" {% if preserve_colors %}checked{% endif %}>
+                                <label class="form-check-label" for="preserve_colors">Preserve Hueforge color layers</label>
+                                <small class="help-text d-block">Migrates color layer information to the output 3MF (adjusts Z-heights for new position)</small>
+                            </div>
+                        </div>
+
 <!-- DEV
                         <div class="optional-toggle mt-3" onclick="toggleSection('fill')">
                             <i class="fas fa-fill-drip"></i> Fill Options

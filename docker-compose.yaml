@@ -4,11 +4,11 @@ services:
   web:
     image: smithforge:latest
     build:
-      context: https://github.com/S1N4X/SmithForge-WebUI.git#main
+      context: .
       dockerfile: Dockerfile
     container_name: smithforge_web
     ports:
-      - "${PORT:-8000}:8000"
+      - "${PORT:-8003}:8000"
     volumes:
       - "${APPDATA:-./outputs}:/app/outputs"
     environment:

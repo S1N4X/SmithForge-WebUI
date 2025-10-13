@@ -10,8 +10,8 @@ RUN pip install --no-cache-dir -r requirements.txt
 # Copy everything into the container
 COPY . .
 
-# Create a directory for the outputs
-RUN mkdir -p outputs
+# Create necessary directories
+RUN mkdir -p outputs inputs inputs/bases
 
 # Web server
 EXPOSE 8000
