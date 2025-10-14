@@ -316,6 +316,18 @@
                             </small>
                         </div>
 
+                        <div class="optional-toggle mt-3" onclick="toggleSection('repair')">
+                            <i class="fas fa-wrench"></i>  Automatic model repair
+                            <i class="fas fa-chevron-down float-right"></i>
+                        </div>
+                        <div id="repair" class="optional-section">
+                            <div class="form-group form-check">
+                                <input type="checkbox" class="form-check-input" id="auto_repair" name="auto_repair">
+                                <label class="form-check-label" for="auto_repair">Enable automatic mesh repair</label>
+                                <small class="help-text d-block">Automatically validates and fixes mesh issues (holes, non-manifold edges, degenerate faces) before processing. This can help resolve "Not all meshes are volumes" errors.</small>
+                            </div>
+                        </div>
+
 <!-- DEV
                         <div class="optional-toggle mt-3" onclick="toggleSection('fill')">
                             <i class="fas fa-fill-drip"></i> Fill Options

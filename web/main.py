@@ -210,6 +210,7 @@ async def run_smithforge(
     yshift: str = Form(""),  # Accept as string, parse later
     zshift: str = Form(""),  # Accept as string, parse later
     preserve_colors: bool = Form(True),  # Default to True (enabled)
+    auto_repair: bool = Form(False),  # Auto-repair mesh issues
     #DEV: fill: float = Form(None),  # Change fill parameter to float
     #DEV: watertight: bool = Form(False)
 ):
@@ -295,6 +296,10 @@ async def run_smithforge(
     if preserve_colors:
         command.append("--preserve-colors")
 
+    # If auto_repair is checked, pass the --auto-repair flag
+    if auto_repair:
+        command.append("--auto-repair")
+
     # Pass xshift, yshift, zshift only if they are set
     if xshift_val is not None:
         command += ["--xshift", str(xshift_val)]
@@ -357,6 +362,7 @@ async def run_smithforge(
                 "yshift": yshift_val,
                 "zshift": zshift_val,
                 "preserve_colors": preserve_colors,
+                "auto_repair": auto_repair,
                 #DEV: "fill": fill
             }
         )

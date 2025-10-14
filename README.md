@@ -11,6 +11,7 @@ SmithForge WebUI is a web-based interface for the SmithForge tool, which allows 
 - Web-based interface for SmithForge
 - **Interactive 3D Model Preview** - Visualize your models before processing
 - **Layer Visualization** - View Hueforge color layers before processing
+- **Automatic Model Repair** - Validate and fix mesh issues before processing
 - Upload and process 3MF models
 - Automatic scaling and positioning
 - Customizable rotation and shifts
@@ -161,6 +162,43 @@ The visualization accounts for:
 - **Check Heights**: Confirm layer positions after embedding
 - **Troubleshoot**: Identify layer-related issues early
 - **Plan Prints**: Understand where filament changes will occur
+
+## Automatic Model Repair
+
+The Automatic Model Repair feature validates and fixes common mesh issues that can cause boolean operations to fail, such as the "Not all meshes are volumes" error.
+
+### How It Works
+
+1. **Enable Auto-Repair**: Check the "Enable automatic mesh repair" option in the Optional Settings
+2. **Automatic Validation**: Both models are validated before processing
+3. **Repair Process**: Issues are automatically fixed using proven repair algorithms
+4. **Detailed Report**: View repair results in the process log after forging
+
+### Issues That Can Be Fixed
+
+- **Non-watertight meshes** - Holes in the mesh surface are automatically filled
+- **Non-manifold edges** - Edges shared by more than 2 faces are corrected
+- **Degenerate faces** - Zero-area faces are removed
+- **Duplicate vertices/faces** - Redundant geometry is cleaned up
+- **Inverted normals** - Face orientations are corrected for consistent winding
+- **Unreferenced vertices** - Orphaned vertices are removed
+
+### When to Use Auto-Repair
+
+Use auto-repair when:
+- You encounter "Not all meshes are volumes" errors
+- Your models have been edited or modified in external tools
+- You're working with models from various sources with unknown quality
+- You want to ensure reliable boolean operations
+
+### Repair Report
+
+After processing with auto-repair enabled, the result page will show:
+- A blue notification indicating auto-repair was used
+- Detailed repair information in the process log, including:
+  - Issues detected in each model
+  - Repairs successfully applied
+  - Warnings about any remaining issues
 
 ## License
 
