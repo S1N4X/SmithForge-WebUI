@@ -229,6 +229,26 @@
                             </div>
                         </div>
 
+                        <div class="optional-toggle mt-3" onclick="toggleSection('layers')">
+                            <i class="fas fa-layer-group"></i>  Layer Visualization
+                            <i class="fas fa-chevron-down float-right"></i>
+                        </div>
+                        <div id="layers" class="optional-section">
+                            <div class="mb-2">
+                                <div id="layer-loading" style="display: none;">
+                                    <i class="fas fa-spinner fa-spin"></i> Loading...
+                                </div>
+                                <div id="layer-info-text" class="text-muted">
+                                    <i class="fas fa-info-circle"></i> Upload Hueforge file to see layers
+                                </div>
+                                <span id="layer-count-badge" class="badge badge-primary" style="display: none;">0</span>
+                            </div>
+                            <div id="layer-bars-container"></div>
+                            <small class="help-text d-block mt-2">
+                                Shows color layer heights from Hueforge file. Updates automatically when Z-shift changes.
+                            </small>
+                        </div>
+
 <!-- DEV
                         <div class="optional-toggle mt-3" onclick="toggleSection('fill')">
                             <i class="fas fa-fill-drip"></i> Fill Options
@@ -363,5 +383,6 @@
             btn.innerHTML = '<i class="fas fa-fire"></i> Forging...';
         });
     </script>
+    <script src="{{ url_for('static', path='layer-viz.js') }}"></script>
 </body>
 </html>

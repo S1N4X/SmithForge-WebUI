@@ -70,8 +70,10 @@ The `modify_3mf()` function performs these operations in sequence:
   - `main.py` - FastAPI routes and subprocess orchestration
   - `templates/` - Jinja2 HTML templates (index, result, error)
   - `static/` - CSS and static assets
-- `SmithForge/` - Core processing submodule
+    - `layer-viz.js` - Layer visualization JavaScript
+- `SmithForge/` - Core processing submodule (git submodule)
   - `smithforge.py` - Main 3D model manipulation script
+  - `layer_parser.py` - Extract layer information from 3MF files
 - `inputs/` - Uploaded Hueforge files (created at runtime)
   - `bases/` - Base model files (uploaded or defaults)
 - `outputs/` - Generated combined models (created at runtime)
@@ -96,6 +98,55 @@ The `modify_3mf()` function performs these operations in sequence:
 - **"Not all meshes are volumes" error**: Input models are not watertight/manifold. This error is caught and displayed in error.html (web/main.py:231)
 - **Empty intersection**: Occurs when there's no overlap between models or when base is not a valid volume
 - **Path issues**: The web server uses relative paths from project root, subprocess calls use paths relative to working directory
+
+## Frontend Features
+
+### Layer Visualization (smithforge/layer_parser.py, web/static/layer-viz.js)
+Extracts and displays color layer information from Hueforge 3MF files.
+
+**Architecture:**
+```
+User uploads Hueforge → /get-layers endpoint → layer_parser.py extracts metadata →
+Returns JSON with layer info → layer-viz.js displays visual bars
+```
+
+**Layer Parser** (`smithforge/layer_parser.py`):
+- Parses 3MF ZIP archives for layer metadata
+- Supports multiple formats:
+  - Bambu Lab (layer_config_ranges.xml)
+  - PrusaSlicer (custom_gcode_per_layer.xml)
+  - Generic 3MF (color base materials)
+- Extracts: Z-heights, colors, layer numbers
+- Imports DEFAULT_EMBEDDING_OVERLAP_MM for accurate calculations
+- `adjust_layers_for_zshift()` - Adjusts heights for user Z-shift parameter
+
+**Get-Layers Endpoint** (`/get-layers` in web/main.py):
+- Accepts uploaded 3MF file via POST
+- Accepts optional `z_shift` parameter (default 0.0)
+- Returns JSON: `{layers, total_height, layer_count, has_colors, format}`
+- Temporary file handling with automatic cleanup
+
+**Layer Visualization UI** (`web/static/layer-viz.js`):
+- Auto-loads when Hueforge file selected
+- Displays color-coded layer bars
+- Shows: layer number, Z-height, color indicator
+- Updates dynamically when Z-shift parameter changes (500ms debounce)
+- Loading indicators during fetch
+- Format badge (Bambu/Prusa/Generic)
+
+**Display Features:**
+- Scrollable layer list (max 300px height)
+- Color-coded left borders matching layer colors
+- Hover effects for interactivity
+- Layer count badge
+- Summary: "X layers, Y.YYmm total"
+
+**Z-Offset Calculations:**
+The layer visualization accounts for:
+1. Original layer Z-heights from 3MF
+2. Embedding overlap (DEFAULT_EMBEDDING_OVERLAP_MM)
+3. User Z-shift parameter
+4. Final formula: `displayed_z = original_z - overlap + z_shift`
 
 ## Technology Stack
 - **Backend**: FastAPI + Uvicorn
