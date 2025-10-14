@@ -10,6 +10,7 @@ SmithForge WebUI is a web-based interface for the SmithForge tool, which allows 
 
 - Web-based interface for SmithForge
 - **Interactive 3D Model Preview** - Visualize your models before processing
+- **Layer Visualization** - View Hueforge color layers before processing
 - Upload and process 3MF models
 - Automatic scaling and positioning
 - Customizable rotation and shifts
@@ -125,6 +126,41 @@ Presets save the following parameters:
 - Base template selection (default bases or upload)
 
 **Note:** Presets are stored locally in your browser using localStorage. They will persist between sessions but are not synced across different browsers or devices.
+
+## Layer Visualization
+
+The Layer Visualization feature extracts and displays color layer information from Hueforge 3MF files, helping you understand the layer structure before processing.
+
+### How It Works
+
+1. **Upload Hueforge File**: When you select a Hueforge 3MF file, the layer information is automatically extracted
+2. **View Layers**: Expand the "Layer Visualization" section in Optional Settings to see:
+   - Number of layers
+   - Total height
+   - Individual layer heights (Z-coordinates)
+   - Layer colors (color-coded bars)
+   - File format (Bambu Lab, PrusaSlicer, etc.)
+3. **Dynamic Updates**: Layer heights automatically adjust when you change the Z-shift parameter
+
+### Supported Formats
+
+- **Bambu Lab** (layer_config_ranges.xml)
+- **PrusaSlicer/SuperSlicer** (custom_gcode_per_layer.xml)
+- **Generic 3MF** (color metadata)
+
+### Layer Height Adjustments
+
+The visualization accounts for:
+- **Embedding overlap** (DEFAULT_EMBEDDING_OVERLAP_MM = 0.1mm)
+- **User Z-shift** parameter
+- Shows final layer positions in the combined model
+
+### Benefits
+
+- **Verify Layer Data**: Ensure color information is present before processing
+- **Check Heights**: Confirm layer positions after embedding
+- **Troubleshoot**: Identify layer-related issues early
+- **Plan Prints**: Understand where filament changes will occur
 
 ## License
 
