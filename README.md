@@ -9,6 +9,7 @@ SmithForge WebUI is a web-based interface for the SmithForge tool, which allows 
 ## Features
 
 - Web-based interface for SmithForge
+- **Interactive 3D Model Preview** - Visualize your models before processing
 - Upload and process 3MF models
 - Automatic scaling and positioning
 - Customizable rotation and shifts
@@ -50,6 +51,44 @@ SmithForge WebUI is a web-based interface for the SmithForge tool, which allows 
 3. Configure the optional settings as needed.
 4. Click "Start Forging" to process the models.
 5. Download the combined 3MF model once the process is complete.
+
+## 3D Model Preview
+
+The 3D Model Preview feature allows you to visualize your uploaded models in an interactive 3D viewer before processing, helping you verify your models and catch potential issues early.
+
+### How to Use
+
+1. **Upload Models**: When you upload your Hueforge or base model files, they will automatically appear in the 3D viewer
+2. **Navigate the View**:
+   - **Rotate**: Left-click and drag
+   - **Pan**: Right-click and drag
+   - **Zoom**: Scroll mouse wheel
+3. **View Controls**:
+   - **Both**: Show both base and overlay models together (default)
+   - **Base Only**: Show only the base model
+   - **Overlay Only**: Show only the Hueforge overlay model
+4. **Wireframe Mode**: Toggle to see the model's mesh structure
+
+### Model Information
+
+The preview panel displays useful information about each model:
+- **Dimensions**: Width × Height × Depth in millimeters
+- **Volume**: Approximate volume in cubic millimeters
+- **Loading Status**: Visual indicator while models are being processed
+
+### Technical Details
+
+- Models are converted from 3MF to GLB format on-the-fly for web display
+- The viewer uses Three.js for hardware-accelerated 3D rendering
+- Base model appears in gray, overlay model in blue with transparency
+- Grid helper shows scale and orientation
+
+### Benefits
+
+- **Verify Models**: Ensure your models loaded correctly before processing
+- **Check Alignment**: Visual confirmation of model positioning
+- **Early Error Detection**: Spot issues with model geometry or size
+- **Better Understanding**: See exactly what will be processed
 
 ## Parameter Presets
 
