@@ -170,6 +170,15 @@
             </p>
         </div>
 
+        {% if auto_repair %}
+        <div class="note-section mt-4" style="border-left: 4px solid #3498db;">
+            <h3><i class="fas fa-wrench"></i> Auto-Repair Enabled</h3>
+            <p class="text-info">
+                Automatic mesh repair was applied to both models before processing. Check the process log below for details on issues found and repairs applied.
+            </p>
+        </div>
+        {% endif %}
+
         <div class="log-window">
             <div class="text-muted">Process Log:</div>
             {% for line in log_lines %}
