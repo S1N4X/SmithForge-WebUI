@@ -58,7 +58,7 @@ The `modify_3mf()` function performs these operations in sequence:
 2. Optionally rotates base model around Z-axis
 3. Auto-scales Hueforge to match base dimensions (X/Y only, Z unchanged)
 4. Centers Hueforge on base in X/Y plane
-5. Embeds Hueforge with 0.1mm Z overlap for proper union
+5. Embeds Hueforge with DEFAULT_EMBEDDING_OVERLAP_MM (0.1mm) Z overlap for proper union
 6. Applies user-specified X/Y/Z shifts
 7. Creates 2D convex hull from base, extrudes to clip Hueforge
 8. Performs boolean intersection to clip outside geometry
@@ -89,7 +89,7 @@ The `modify_3mf()` function performs these operations in sequence:
 2. **Z-axis Preservation**: The Z-axis of Hueforge models must never be scaled - this maintains the color layer integrity
 3. **Manifold Geometry**: Both input models must have proper manifold geometry for boolean operations to succeed
 4. **File Paths**: The subprocess call to smithforge.py uses relative path `smithforge/smithforge.py` (lowercase), not `SmithForge/smithforge.py`
-5. **Default Overlap**: 0.1mm Z overlap is hardcoded in smithforge.py:117 for proper model union
+5. **Default Overlap**: Embedding overlap defined by DEFAULT_EMBEDDING_OVERLAP_MM constant (smithforge.py:27), currently 0.1mm
 
 ## Common Issues
 

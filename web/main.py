@@ -96,6 +96,43 @@ def ensure_3mf_extension(filename: str) -> str:
         return f"{filename}.3mf"
     return filename
 
+@app.post("/get-layers")
+async def get_layers(file: UploadFile = File(...), z_shift: float = Form(0.0)):
+    """
+    Extract layer information from uploaded 3MF file.
+    Returns JSON with layer heights, colors, and metadata.
+    """
+    try:
+        # Import layer parser
+        import sys
+        sys.path.insert(0, os.path.join(os.path.dirname(__file__), '..'))
+        from smithforge.layer_parser import parse_3mf_layers, serialize_layers, adjust_layers_for_zshift
+
+        # Save uploaded file temporarily
+        with tempfile.NamedTemporaryFile(delete=False, suffix='.3mf') as tmp_file:
+            content = await file.read()
+            tmp_file.write(content)
+            tmp_path = tmp_file.name
+
+        # Parse layers
+        layer_data = parse_3mf_layers(tmp_path)
+
+        # Apply Z shift if provided
+        if z_shift != 0.0 and layer_data.get('layers'):
+            layer_data['layers'] = adjust_layers_for_zshift(layer_data['layers'], z_shift)
+
+        # Clean up temp file
+        os.unlink(tmp_path)
+
+        # Serialize and return
+        return JSONResponse(content=serialize_layers(layer_data))
+
+    except Exception as e:
+        return JSONResponse(
+            status_code=500,
+            content={"error": f"Failed to parse layers: {str(e)}"}
+        )
+
 @app.post("/run-smithforge")
 async def run_smithforge(
     request: Request,
