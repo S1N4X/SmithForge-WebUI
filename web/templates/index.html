@@ -259,6 +259,46 @@
             </div>
 
             <div class="form-section">
+                <h3><i class="fas fa-save"></i> Parameter Presets</h3>
+                <div class="row">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label for="presetSelect">Load Saved Preset</label>
+                            <select id="presetSelect" class="form-control">
+                                <option value="">-- Select a preset --</option>
+                            </select>
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label>&nbsp;</label>
+                        <div class="btn-group d-flex" role="group">
+                            <button type="button" id="loadPresetBtn" class="btn btn-outline-primary flex-fill" onclick="loadPreset()">
+                                <i class="fas fa-upload"></i> Load
+                            </button>
+                            <button type="button" id="deletePresetBtn" class="btn btn-outline-danger flex-fill" onclick="deletePreset()">
+                                <i class="fas fa-trash"></i> Delete
+                            </button>
+                        </div>
+                    </div>
+                </div>
+                <div class="row mt-2">
+                    <div class="col-md-8">
+                        <div class="form-group">
+                            <label for="presetName">Save Current Settings</label>
+                            <input type="text" id="presetName" class="form-control" placeholder="Enter preset name">
+                        </div>
+                    </div>
+                    <div class="col-md-4">
+                        <label>&nbsp;</label>
+                        <button type="button" id="savePresetBtn" class="btn btn-success btn-block" onclick="savePreset()">
+                            <i class="fas fa-save"></i> Save Preset
+                        </button>
+                    </div>
+                </div>
+                <small class="help-text">Presets are saved locally in your browser</small>
+            </div>
+
+            <div class="form-section">
                 <button type="submit" id="submitBtn" class="btn btn-primary btn-lg btn-block">
                     <i class="fas fa-hammer"></i> Start Forging
                 </button>
@@ -363,5 +403,6 @@
             btn.innerHTML = '<i class="fas fa-fire"></i> Forging...';
         });
     </script>
+    <script src="{{ url_for('static', path='presets.js') }}"></script>
 </body>
 </html>
