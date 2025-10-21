@@ -33,9 +33,22 @@ docker-compose down
 
 # View logs
 docker-compose logs -f
+
+# Rebuild container after making changes to web templates or static files
+docker-compose down && docker-compose up --build -d
 ```
 
 The web interface will be available at `http://localhost:8000`.
+
+**IMPORTANT**:
+- **After making any changes that need to be tested**, you must rebuild the Docker container for changes to take effect. This includes modifications to:
+  - `web/templates/` - HTML templates
+  - `web/static/` - JavaScript, CSS, and other static files
+  - `web/main.py` - FastAPI backend code
+  - `smithforge/` - Core processing scripts
+  - `requirements.txt` - Python dependencies
+  - Any other application code
+- When using sudo for Docker commands, read the sudo password from `~/.env` file (variable: `SUDO_PASSWORD`)
 
 ### Testing with Puppeteer MCP
 Use the Puppeteer MCP to test the web application at `http://localhost:8000`.
