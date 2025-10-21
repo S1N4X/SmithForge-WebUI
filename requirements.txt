@@ -8,6 +8,7 @@ manifold3d==3.0.0
 
 trimesh==4.5.3
 shapely==2.0.6
+scipy>=1.11.0
 
 # Combined model image render
 # matplotlib==3.9.0
