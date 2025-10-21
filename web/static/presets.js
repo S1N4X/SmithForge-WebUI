@@ -35,6 +35,8 @@ function getCurrentParameters() {
         yshift: document.getElementById('yshift').value,
         zshift: document.getElementById('zshift').value,
         preserve_colors: document.getElementById('preserve_colors').checked,
+        auto_repair: document.getElementById('auto_repair').checked,
+        fill_gaps: document.getElementById('fill_gaps').checked,
         output_name: document.getElementById('output_name').value,
         base_template: document.querySelector('input[name="base_template"]:checked').value
     };
@@ -81,6 +83,12 @@ function applyParameters(params) {
     }
     if (params.preserve_colors !== undefined) {
         document.getElementById('preserve_colors').checked = params.preserve_colors;
+    }
+    if (params.auto_repair !== undefined) {
+        document.getElementById('auto_repair').checked = params.auto_repair;
+    }
+    if (params.fill_gaps !== undefined) {
+        document.getElementById('fill_gaps').checked = params.fill_gaps;
     }
 
     // Apply base template selection

@@ -338,6 +338,18 @@
                             </div>
                         </div>
 
+                        <div class="optional-toggle mt-3" onclick="toggleSection('fillgaps')">
+                            <i class="fas fa-puzzle-piece"></i> Gap Filling
+                            <i class="fas fa-chevron-down float-right"></i>
+                        </div>
+                        <div id="fillgaps" class="optional-section">
+                            <div class="form-group form-check">
+                                <input type="checkbox" class="form-check-input" id="fill_gaps" name="fill_gaps">
+                                <label class="form-check-label" for="fill_gaps">Fill gaps between overlay and base</label>
+                                <small class="help-text d-block">When the overlay is scaled smaller than the base, automatically fill the empty space with background material at the detected Hueforge background height. Useful for creating seamless designs with scaled-down overlays.</small>
+                            </div>
+                        </div>
+
 <!-- DEV
                         <div class="optional-toggle mt-3" onclick="toggleSection('fill')">
                             <i class="fas fa-fill-drip"></i> Fill Options

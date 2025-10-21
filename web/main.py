@@ -215,8 +215,7 @@ async def run_smithforge(
     zshift: str = Form(""),  # Accept as string, parse later
     preserve_colors: bool = Form(True),  # Default to True (enabled)
     auto_repair: bool = Form(False),  # Auto-repair mesh issues
-    #DEV: fill: float = Form(None),  # Change fill parameter to float
-    #DEV: watertight: bool = Form(False)
+    fill_gaps: bool = Form(False),  # Fill gaps between overlay and base
 ):
     """
     Receives the uploaded .3mf files and parameters from the form.
@@ -304,6 +303,10 @@ async def run_smithforge(
     if auto_repair:
         command.append("--auto-repair")
 
+    # If fill_gaps is checked, pass the --fill-gaps flag
+    if fill_gaps:
+        command.append("--fill-gaps")
+
     # Pass xshift, yshift, zshift only if they are set
     if xshift_val is not None:
         command += ["--xshift", str(xshift_val)]
@@ -311,14 +314,6 @@ async def run_smithforge(
         command += ["--yshift", str(yshift_val)]
     if zshift_val is not None:
         command += ["--zshift", str(zshift_val)]
-
-    #DEV: Add fill parameter to command if provided
-    #DEV: if fill is not None:
-    #DEV:    command += ["--fill", str(fill)]
-
-    #DEV: Add watertight parameter to command if checked
-    #DEV:if watertight:
-    #DEV:    command.append("--watertight")
 
     # 4) Run the command with subprocess
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
