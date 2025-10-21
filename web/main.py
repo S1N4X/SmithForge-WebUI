@@ -99,8 +99,9 @@ async def preview_model(file: UploadFile = File(...)):
             # Get all geometries and combine them
             meshes = []
             for node_name in mesh.graph.nodes_geometry:
-                transform = mesh.graph.get(node_name)[0]
-                geometry = mesh.geometry[mesh.graph[node_name][0]]
+                # Get transform and geometry name from the graph
+                transform, geometry_name = mesh.graph.get(node_name)
+                geometry = mesh.geometry[geometry_name]
                 meshes.append(geometry.apply_transform(transform))
             if meshes:
                 mesh = trimesh.util.concatenate(meshes)
@@ -134,6 +135,9 @@ async def preview_model(file: UploadFile = File(...)):
         )
 
     except Exception as e:
+        import traceback
+        error_details = traceback.format_exc()
+        print(f"ERROR in preview-model: {error_details}")
         return JSONResponse(
             status_code=500,
             content={"error": f"Failed to convert model: {str(e)}"}
