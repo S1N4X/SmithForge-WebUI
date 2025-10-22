@@ -218,6 +218,7 @@ async def run_smithforge(
     swap_instructions_file: UploadFile = File(None),  # Text file with swap instructions
     auto_repair: bool = Form(False),  # Auto-repair mesh issues
     fill_gaps: bool = Form(False),  # Fill gaps between overlay and base
+    output_format: str = Form("standard"),  # Output format: standard or bambu
 ):
     """
     Receives the uploaded .3mf files and parameters from the form.
@@ -332,6 +333,9 @@ async def run_smithforge(
     if zshift_val is not None:
         command += ["--zshift", str(zshift_val)]
 
+    # Pass output format
+    command += ["--output-format", output_format]
+
     # 4) Run the command with subprocess
     process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
     stdout, stderr = process.communicate()
@@ -379,7 +383,8 @@ async def run_smithforge(
                 "zshift": zshift_val,
                 "color_mode": color_mode,
                 "auto_repair": auto_repair,
-                "fill_gaps": fill_gaps
+                "fill_gaps": fill_gaps,
+                "output_format": output_format
             }
         )
     else:

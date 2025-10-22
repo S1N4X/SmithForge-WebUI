@@ -226,9 +226,20 @@
                         <h3><i class="fas fa-file-export"></i> Output Settings</h3>
                         <div class="form-group">
                             <label for="output_name">Output Filename</label>
-                            <input type="text" name="output_name" id="output_name" class="form-control" 
+                            <input type="text" name="output_name" id="output_name" class="form-control"
                                    placeholder="Leave empty for automatic name" />
                             <small class="help-text">Will combine base and overlay names if left empty</small>
+                        </div>
+                        <div class="form-group">
+                            <label for="output_format">Output Format</label>
+                            <select name="output_format" id="output_format" class="form-control">
+                                <option value="standard" selected>Standard 3MF (Universal)</option>
+                                <option value="bambu">Bambu Studio 3MF (Production Extension)</option>
+                            </select>
+                            <small class="help-text">
+                                <strong>Standard:</strong> Compatible with most slicers (PrusaSlicer, Cura, etc.)<br>
+                                <strong>Bambu:</strong> Optimized for Bambu Studio with proper component structure
+                            </small>
                         </div>
                     </div>
                 </div>

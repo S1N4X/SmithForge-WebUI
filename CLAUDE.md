@@ -92,9 +92,36 @@ The `modify_3mf()` function performs these operations in sequence:
   - `layer_parser.py` - Extract layer information from 3MF files
   - `text_layer_parser.py` - Parse HueForge swap instructions text
   - `repair.py` - Mesh validation and repair module
+  - `lib3mf_exporter.py` - Bambu Studio compatible 3MF exporter using lib3mf C++
 - `inputs/` - Uploaded Hueforge files (created at runtime)
   - `bases/` - Base model files (uploaded or defaults)
 - `outputs/` - Generated combined models (created at runtime)
+
+### Output Format Options
+
+SmithForge supports two output formats for maximum compatibility:
+
+#### Standard 3MF (Default)
+- **Export Method**: trimesh library
+- **Compatibility**: Universal - works with PrusaSlicer, Cura, Simplify3D, OrcaSlicer, and most slicers
+- **Structure**: Simple 3MF format with embedded mesh geometry
+- **Color Metadata**: Injected post-export via ZIP manipulation
+- **Use Case**: General purpose, maximum compatibility
+
+#### Bambu Studio 3MF
+- **Export Method**: lib3mf C++ library with Production Extension
+- **Compatibility**: Optimized for Bambu Studio and Bambu Lab printers
+- **Structure**: Component-based 3MF with proper Production Extension namespace
+- **Color Metadata**: Integrated during export with proper XML structure
+- **Use Case**: When targeting Bambu Studio specifically, or when "No such node (objects)" errors occur with standard format
+- **Fallback**: Automatically falls back to standard export if lib3mf is unavailable
+
+**Implementation Details:**
+- Format selection available in web UI dropdown (Output Settings section)
+- Passed via `--output-format` parameter (choices: `standard`, `bambu`)
+- Export logic in `smithforge.py:706-742` branches based on format
+- Bambu export delegated to `lib3mf_exporter.Lib3mfExporter` class
+- lib3mf CLI tool installed in Docker container during build
 
 ### Key Parameters
 - `--rotatebase` - Rotate base model (degrees)
@@ -105,6 +132,7 @@ The `modify_3mf()` function performs these operations in sequence:
 - `--inject-colors-text` - Inject color layers from HueForge swap instructions text (mutually exclusive with --preserve-colors)
 - `--auto-repair` - Enable automatic mesh validation and repair
 - `--fill-gaps` - Fill gaps between scaled overlay and base boundaries
+- `--output-format` - Output format selection: `standard` (default) or `bambu`
 - Z-axis height is never modified to maintain Hueforge visual integrity
 
 ## Important Constraints
