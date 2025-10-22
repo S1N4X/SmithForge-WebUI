@@ -56,7 +56,7 @@ def get_form(
     xshift: float = None,
     yshift: float = None,
     zshift: float = None,
-    preserve_colors: bool = True
+    color_mode: str = "none"
 ):
     """
     Render the main HTML form that allows the user
@@ -74,7 +74,7 @@ def get_form(
         "xshift": xshift,
         "yshift": yshift,
         "zshift": zshift,
-        "preserve_colors": preserve_colors,
+        "color_mode": color_mode,
         "default_base_models": default_base_models
     })
 
@@ -213,7 +213,9 @@ async def run_smithforge(
     xshift: str = Form(""),  # Accept as string, parse later
     yshift: str = Form(""),  # Accept as string, parse later
     zshift: str = Form(""),  # Accept as string, parse later
-    preserve_colors: bool = Form(True),  # Default to True (enabled)
+    color_mode: str = Form("none"),  # Color layer mode: none, preserve, inject
+    swap_instructions_text: str = Form(""),  # Text swap instructions
+    swap_instructions_file: UploadFile = File(None),  # Text file with swap instructions
     auto_repair: bool = Form(False),  # Auto-repair mesh issues
     fill_gaps: bool = Form(False),  # Fill gaps between overlay and base
 ):
@@ -295,9 +297,24 @@ async def run_smithforge(
     if scaledown:
         command.append("--scaledown")
 
-    # If preserve_colors is checked, pass the --preserve-colors flag
-    if preserve_colors:
+    # Handle color layer mode
+    if color_mode == "preserve":
         command.append("--preserve-colors")
+    elif color_mode == "inject":
+        # Get swap instructions text (from textarea or file)
+        swap_text = swap_instructions_text.strip()
+
+        # If file is provided, read it and prefer file content over textarea
+        if swap_instructions_file and swap_instructions_file.filename:
+            file_content = await swap_instructions_file.read()
+            swap_text = file_content.decode('utf-8')
+
+        if swap_text:
+            # Pass the text directly as an argument
+            command += ["--inject-colors-text", swap_text]
+        else:
+            # No text provided - should show error but let smithforge handle it
+            print("⚠️  Warning: Inject mode selected but no swap instructions provided")
 
     # If auto_repair is checked, pass the --auto-repair flag
     if auto_repair:
@@ -360,9 +377,9 @@ async def run_smithforge(
                 "xshift": xshift_val,
                 "yshift": yshift_val,
                 "zshift": zshift_val,
-                "preserve_colors": preserve_colors,
+                "color_mode": color_mode,
                 "auto_repair": auto_repair,
-                #DEV: "fill": fill
+                "fill_gaps": fill_gaps
             }
         )
     else:

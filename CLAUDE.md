@@ -90,6 +90,7 @@ The `modify_3mf()` function performs these operations in sequence:
 - `smithforge/` - Core processing submodule (git submodule)
   - `smithforge.py` - Main 3D model manipulation script
   - `layer_parser.py` - Extract layer information from 3MF files
+  - `text_layer_parser.py` - Parse HueForge swap instructions text
   - `repair.py` - Mesh validation and repair module
 - `inputs/` - Uploaded Hueforge files (created at runtime)
   - `bases/` - Base model files (uploaded or defaults)
@@ -100,8 +101,10 @@ The `modify_3mf()` function performs these operations in sequence:
 - `--scale` - Force specific scale value
 - `--scaledown` - Allow scaling below 1.0
 - `--xshift/yshift/zshift` - Position adjustments in mm
-- `--preserve-colors` - Preserve Hueforge color layer information
+- `--preserve-colors` - Preserve Hueforge color layer information from original 3MF
+- `--inject-colors-text` - Inject color layers from HueForge swap instructions text (mutually exclusive with --preserve-colors)
 - `--auto-repair` - Enable automatic mesh validation and repair
+- `--fill-gaps` - Fill gaps between scaled overlay and base boundaries
 - Z-axis height is never modified to maintain Hueforge visual integrity
 
 ## Important Constraints
@@ -321,6 +324,59 @@ The `validate_mesh()` function checks for:
 - Repair operations scale with mesh complexity
 - Fill holes can be slow for large gaps
 - Self-intersection check disabled by default (O(n²) complexity)
+
+## Color Layer Management
+
+SmithForge WebUI supports three modes for managing color layer information in the output 3MF:
+
+### Mode 1: No Color Layers (Default)
+- Output 3MF contains no color layer metadata
+- Simplest option for basic model combining
+
+### Mode 2: Preserve from Hueforge File
+- Extracts color layer information from the uploaded Hueforge 3MF file
+- Automatically adjusts Z-heights to account for:
+  - Embedding overlap (`DEFAULT_EMBEDDING_OVERLAP_MM` = 0.1mm)
+  - User-specified Z-shift parameter
+- Supports multiple 3MF metadata formats (Bambu Lab, PrusaSlicer)
+- Formula: `final_layer_z = original_z + base_top_z - overlap + z_shift`
+
+### Mode 3: Inject from Text/File
+- Parses HueForge swap instruction text to generate color layers
+- **Mutually exclusive** with Mode 2 (preserve)
+- Accounts for embedding offset and Z-shift just like preserve mode
+
+**Expected Text Format:**
+```
+Filaments Used:
+PLA BambuLab Basic Black
+PLA BambuLab Basic Cobalt Blue
+PLA BambuLab Basic Sunflower Yellow
+
+Swap Instructions:
+Start with Black
+At layer #8 (0.72mm) swap to Cobalt Blue
+At layer #15 (1.28mm) swap to Sunflower Yellow
+```
+
+**Implementation:**
+- Text parser: `smithforge/text_layer_parser.py`
+- Strict format matching (case-insensitive)
+- Color name to hex mapping with common filament colors
+- Validates layer heights against final model Z-height
+- Supports both textarea input and .txt file upload in web UI
+
+**Z-Offset Calculation:**
+The text injection mode applies the same Z-offset as preserve mode:
+1. Layers start at original Z-heights from swap instructions
+2. Adjusted for base top Z position
+3. Subtracted by embedding overlap (0.1mm)
+4. Added user Z-shift parameter
+
+**Validation:**
+- Warns if layer heights exceed final model height
+- Checks for negative Z-heights
+- Does not fail the build (warnings only)
 
 ## Technology Stack
 - **Backend**: FastAPI + Uvicorn

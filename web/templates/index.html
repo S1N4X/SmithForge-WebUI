@@ -295,14 +295,54 @@
                         </div>
 
                         <div class="optional-toggle mt-3" onclick="toggleSection('colors')">
-                            <i class="fas fa-palette"></i>  Color preservation
+                            <i class="fas fa-palette"></i>  Color Layer Management
                             <i class="fas fa-chevron-down float-right"></i>
                         </div>
                         <div id="colors" class="optional-section">
-                            <div class="form-group form-check">
-                                <input type="checkbox" class="form-check-input" id="preserve_colors" name="preserve_colors" {% if preserve_colors %}checked{% endif %}>
-                                <label class="form-check-label" for="preserve_colors">Preserve Hueforge color layers</label>
-                                <small class="help-text d-block">Migrates color layer information to the output 3MF (adjusts Z-heights for new position)</small>
+                            <div class="form-group">
+                                <label class="font-weight-bold">Color Layer Source</label>
+                                <div class="form-check">
+                                    <input type="radio" class="form-check-input" id="color_mode_none" name="color_mode" value="none" checked onchange="toggleColorMode()">
+                                    <label class="form-check-label" for="color_mode_none">
+                                        No color layers
+                                    </label>
+                                    <small class="help-text d-block">Don't add color layer information to output</small>
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input type="radio" class="form-check-input" id="color_mode_preserve" name="color_mode" value="preserve" onchange="toggleColorMode()">
+                                    <label class="form-check-label" for="color_mode_preserve">
+                                        Preserve from Hueforge file
+                                    </label>
+                                    <small class="help-text d-block">Extract color layers from uploaded Hueforge 3MF (adjusts Z-heights for embedding)</small>
+                                </div>
+                                <div class="form-check mt-2">
+                                    <input type="radio" class="form-check-input" id="color_mode_inject" name="color_mode" value="inject" onchange="toggleColorMode()">
+                                    <label class="form-check-label" for="color_mode_inject">
+                                        Inject from text/file
+                                    </label>
+                                    <small class="help-text d-block">Parse HueForge swap instructions and inject color layers</small>
+                                </div>
+                            </div>
+
+                            <div id="inject_text_container" class="mt-3" style="display: none;">
+                                <div class="form-group">
+                                    <label for="swap_instructions_text">HueForge Swap Instructions</label>
+                                    <textarea class="form-control" id="swap_instructions_text" name="swap_instructions_text" rows="8" placeholder="Filaments Used:
+PLA BambuLab Basic Black
+PLA BambuLab Basic Cobalt Blue
+PLA BambuLab Basic Sunflower Yellow
+
+Swap Instructions:
+Start with Black
+At layer #8 (0.72mm) swap to Cobalt Blue
+At layer #15 (1.28mm) swap to Sunflower Yellow"></textarea>
+                                    <small class="help-text d-block mt-1">Paste HueForge swap instructions here</small>
+                                </div>
+                                <div class="form-group">
+                                    <label for="swap_instructions_file">Or upload text file</label>
+                                    <input type="file" class="form-control-file" id="swap_instructions_file" name="swap_instructions_file" accept=".txt">
+                                    <small class="help-text d-block">Upload a .txt file containing swap instructions</small>
+                                </div>
                             </div>
                         </div>
 
@@ -444,6 +484,12 @@
             const section = document.getElementById(id);
             const currentDisplay = section.style.display;
             section.style.display = currentDisplay === 'block' ? 'none' : 'block';
+        }
+
+        function toggleColorMode() {
+            const injectMode = document.getElementById('color_mode_inject').checked;
+            const injectContainer = document.getElementById('inject_text_container');
+            injectContainer.style.display = injectMode ? 'block' : 'none';
         }
 
         // Add new function to generate filename
