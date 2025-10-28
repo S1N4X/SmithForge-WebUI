@@ -3,14 +3,30 @@ FROM python:3.9-slim
 
 WORKDIR /app
 
-# Install system dependencies
+# Install system dependencies including Bambu Studio requirements
 RUN apt-get update && apt-get install -y \
     curl \
+    wget \
+    libfuse2 \
+    libwebkit2gtk-4.1-0 \
+    libgtk-3-0 \
+    libglib2.0-0 \
+    libnss3 \
+    libgdk-pixbuf-2.0-0 \
+    libcairo2 \
+    libpango-1.0-0 \
+    libdbus-1-3 \
+    libx11-6 \
     && rm -rf /var/lib/apt/lists/*
 
-# Note: lib3mf C++ library installation commented out for now
-# Will be added once we verify the correct build process
-# Fallback to standard 3MF export will be used
+# Download and install Bambu Studio AppImage (Ubuntu 24.04 for webkit 4.1 compatibility)
+RUN wget -O /tmp/bambustudio.AppImage \
+    "https://github.com/bambulab/BambuStudio/releases/download/v02.03.00.70/Bambu_Studio_ubuntu-24.04_PR-8184.AppImage" \
+    && chmod +x /tmp/bambustudio.AppImage \
+    && cd /tmp && ./bambustudio.AppImage --appimage-extract \
+    && mv squashfs-root /opt/bambustudio \
+    && ln -s /opt/bambustudio/AppRun /usr/local/bin/bambu-studio \
+    && rm /tmp/bambustudio.AppImage
 
 # Copy requirements.txt and install
 COPY requirements.txt .
