@@ -1,4 +1,22 @@
-# Dockerfile
+# Multi-stage Dockerfile for SmithForge-WebUI
+# Stage 1: Build React frontend
+FROM node:20-slim AS frontend-builder
+
+WORKDIR /app/frontend
+
+# Copy frontend package files
+COPY frontend/package.json frontend/package-lock.json ./
+
+# Install frontend dependencies
+RUN npm ci
+
+# Copy frontend source
+COPY frontend ./
+
+# Build React app for production
+RUN npm run build
+
+# Stage 2: Runtime environment (Python + Node.js)
 FROM python:3.9-slim
 
 WORKDIR /app
@@ -28,25 +46,44 @@ RUN wget -O /tmp/bambustudio.AppImage \
     && ln -s /opt/bambustudio/AppRun /usr/local/bin/bambu-studio \
     && rm /tmp/bambustudio.AppImage
 
-# Copy requirements.txt and install
+# Install Node.js 20.x for Express backend
+RUN curl -fsSL https://deb.nodesource.com/setup_20.x | bash - \
+    && apt-get install -y nodejs \
+    && rm -rf /var/lib/apt/lists/*
+
+# Copy and install Python dependencies
 COPY requirements.txt .
 RUN pip install --no-cache-dir -r requirements.txt
 
-# Copy everything into the container
-COPY . .
+# Copy backend code
+COPY backend ./backend
+
+# Install backend Node.js dependencies (production only)
+WORKDIR /app/backend
+RUN npm ci --production
+
+# Copy smithforge Python scripts
+WORKDIR /app
+COPY smithforge ./smithforge
+
+# Copy built React frontend from Stage 1
+COPY --from=frontend-builder /app/frontend/dist ./frontend/dist
 
 # Create necessary directories
 RUN mkdir -p outputs inputs inputs/bases
 
-# Web server
-EXPOSE 8000
-CMD ["uvicorn", "web.main:app", "--host", "0.0.0.0", "--port", "8000"]
+# Expose port 3001
+EXPOSE 3001
+
+# Start Express backend server
+WORKDIR /app/backend
+CMD ["node", "server.js"]
 
 # Labels (for Unraid)
 LABEL com.docker.compose.project="smithforge"
 LABEL com.docker.compose.service="web"
-LABEL com.docker.compose.version="1.0"
+LABEL com.docker.compose.version="2.0"
 
-# Add health check
+# Add health check for Express API
 HEALTHCHECK --interval=30s --timeout=10s --start-period=5s --retries=3 \
-  CMD curl --fail http://localhost:8000/health || exit 1
+  CMD curl --fail http://localhost:3001/api/health || exit 1

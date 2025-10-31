@@ -590,3 +590,163 @@ document.addEventListener('DOMContentLoaded', function() {
         });
     }
 });
+
+/**
+ * Result Viewer - Separate viewer for the merged result
+ */
+let resultScene, resultCamera, resultRenderer, resultControls;
+let resultModel;
+
+function initResultViewer() {
+    const canvas = document.getElementById('result-canvas');
+
+    if (!canvas) {
+        console.error('Result canvas not found');
+        return;
+    }
+
+    // Create scene
+    resultScene = new THREE.Scene();
+    resultScene.background = new THREE.Color(0xf8f9fa);
+
+    // Create camera
+    const aspect = canvas.clientWidth / canvas.clientHeight;
+    resultCamera = new THREE.PerspectiveCamera(45, aspect, 0.1, 10000);
+    resultCamera.position.set(100, 100, 100);
+    resultCamera.lookAt(0, 0, 0);
+
+    // Create renderer
+    resultRenderer = new THREE.WebGLRenderer({ canvas, antialias: true });
+    resultRenderer.setSize(canvas.clientWidth, canvas.clientHeight);
+    resultRenderer.setPixelRatio(window.devicePixelRatio);
+    resultRenderer.shadowMap.enabled = true;
+
+    // Add orbit controls
+    resultControls = new OrbitControls(resultCamera, canvas);
+    resultControls.enableDamping = true;
+    resultControls.dampingFactor = 0.05;
+    resultControls.screenSpacePanning = false;
+    resultControls.minDistance = 10;
+    resultControls.maxDistance = 1000;
+    resultControls.target.set(0, 0, 0);
+
+    // Add lights
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.6);
+    resultScene.add(ambientLight);
+
+    const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.8);
+    directionalLight1.position.set(10, 10, 10);
+    resultScene.add(directionalLight1);
+
+    const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.4);
+    directionalLight2.position.set(-10, -10, -10);
+    resultScene.add(directionalLight2);
+
+    // Add grid
+    const gridHelper = new THREE.GridHelper(200, 20, 0xcccccc, 0xeeeeee);
+    resultScene.add(gridHelper);
+
+    // Animation loop
+    function animate() {
+        requestAnimationFrame(animate);
+        resultControls.update();
+        resultRenderer.render(resultScene, resultCamera);
+    }
+    animate();
+
+    // Handle window resize
+    window.addEventListener('resize', () => {
+        const width = canvas.clientWidth;
+        const height = canvas.clientHeight;
+        resultCamera.aspect = width / height;
+        resultCamera.updateProjectionMatrix();
+        resultRenderer.setSize(width, height);
+    });
+}
+
+/**
+ * Load the merged result model
+ */
+async function loadResultModel(url) {
+    if (!resultScene) {
+        initResultViewer();
+    }
+
+    // Remove existing model
+    if (resultModel) {
+        resultScene.remove(resultModel);
+    }
+
+    // Show loading indicator
+    console.log('Loading result model from:', url);
+
+    try {
+        // First fetch the 3MF file
+        const fileResponse = await fetch(url);
+        const blob = await fileResponse.blob();
+
+        // Create form data
+        const formData = new FormData();
+        formData.append('file', blob, 'result.3mf');
+
+        // Send to preview endpoint
+        const response = await fetch(`/preview-model`, {
+            method: 'POST',
+            body: formData
+        });
+
+        if (!response.ok) {
+            throw new Error(`Failed to load model: ${response.statusText}`);
+        }
+
+        const glbBlob = await response.blob();
+        const glbUrl = URL.createObjectURL(glbBlob);
+
+        const loader = new GLTFLoader();
+        loader.load(glbUrl, (gltf) => {
+            resultModel = gltf.scene;
+
+            // Apply material
+            resultModel.traverse((child) => {
+                if (child.isMesh) {
+                    child.material = new THREE.MeshStandardMaterial({
+                        color: 0x1e90ff,
+                        metalness: 0.2,
+                        roughness: 0.6
+                    });
+                    child.castShadow = true;
+                    child.receiveShadow = true;
+                }
+            });
+
+            resultScene.add(resultModel);
+
+            // Center camera on model
+            const box = new THREE.Box3().setFromObject(resultModel);
+            const center = box.getCenter(new THREE.Vector3());
+            const size = box.getSize(new THREE.Vector3());
+
+            resultControls.target.copy(center);
+            resultControls.update();
+
+            const maxDim = Math.max(size.x, size.y, size.z);
+            const fov = resultCamera.fov * (Math.PI / 180);
+            let cameraZ = Math.abs(maxDim / Math.sin(fov / 2)) * 1.5;
+            resultCamera.position.set(center.x + cameraZ/2, center.y + cameraZ/2, center.z + cameraZ);
+            resultCamera.lookAt(center);
+
+            // Clean up blob URL
+            URL.revokeObjectURL(glbUrl);
+
+            console.log('Result model loaded successfully');
+        }, undefined, (error) => {
+            console.error('Error loading result model:', error);
+        });
+
+    } catch (error) {
+        console.error('Error fetching result model:', error);
+    }
+}
+
+// Expose loadResultModel to global scope for form submission handler
+window.loadResultModel = loadResultModel;

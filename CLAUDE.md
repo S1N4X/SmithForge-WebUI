@@ -2,16 +2,70 @@
 
 This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
+## ⚠️ ACTIVE MIGRATION - READ FIRST ⚠️
+
+**Branch**: `feature/react-ui-redesign`
+**Status**: IN PROGRESS - Migrating from FastAPI/Jinja2 to React + Node.js/Express
+
+### What's Changing
+- **OLD (Deprecated)**: `web/` directory with FastAPI + Jinja2 templates
+- **NEW (Active Development)**: `backend/` (Express API) + `frontend/` (React SPA)
+- **UNCHANGED**: `smithforge/` Python processing logic remains intact
+
+### Quick Reference
+- **Migration Documentation**: See `MIGRATION.md` for detailed progress and architecture
+- **Old Architecture**: FastAPI serves HTML templates (lines 56-151 below)
+- **New Architecture**: Express API + React frontend calling smithforge.py subprocess
+- **Testing**: Still use Puppeteer MCP at `http://localhost:8000`
+
+### Current Phase
+✅ **Phase 1 Complete**: Express backend API fully implemented
+🚧 **Phase 2 In Progress**: React frontend (not started yet)
+⏳ **Phase 3 Pending**: Docker multi-stage build
+⏳ **Phase 4 Pending**: End-to-end testing
+
+**IMPORTANT**: When working on new features:
+1. Check `MIGRATION.md` for current status
+2. Make changes to `backend/` and `frontend/` (NOT `web/`)
+3. Update `MIGRATION.md` as you go
+4. Keep `smithforge/` Python code unchanged
+
+---
+
 ## Project Overview
 
 SmithForge-WebUI is a web-based interface for combining 3MF models by overlaying a Hueforge model onto a base shape with automatic scaling, positioning, and precise intersection alignment. The project consists of:
-- **Core processing script**: `SmithForge/smithforge.py` - handles 3D model manipulation using trimesh
-- **Web interface**: FastAPI application in `web/main.py` with Jinja2 templates
+- **Core processing script**: `smithforge/smithforge.py` - handles 3D model manipulation using trimesh
+- **Web interface** (NEW): Express API (`backend/`) + React SPA (`frontend/`)
+- **Web interface** (OLD/DEPRECATED): FastAPI application in `web/main.py` with Jinja2 templates
 - **Docker deployment**: Configured for easy deployment via Docker Compose
 
 ## Build and Run Commands
 
-### Local Development
+### Local Development (NEW - React + Express)
+```bash
+# Install backend dependencies
+cd backend
+npm install
+
+# Install frontend dependencies
+cd ../frontend
+npm install
+
+# Run backend server (from backend/ directory)
+npm start
+# or for development with auto-reload:
+npm run dev
+
+# Run frontend dev server (from frontend/ directory)
+npm run dev
+
+# The frontend dev server proxies API requests to backend on port 8000
+# Frontend will be available at http://localhost:5173 (Vite default)
+# Backend API at http://localhost:8000
+```
+
+### Local Development (OLD - FastAPI/Jinja2) - DEPRECATED
 ```bash
 # Install dependencies
 pip install -r requirements.txt
@@ -42,11 +96,15 @@ The web interface will be available at `http://localhost:8000`.
 
 **IMPORTANT**:
 - **After making any changes that need to be tested**, you must rebuild the Docker container for changes to take effect. This includes modifications to:
-  - `web/templates/` - HTML templates
-  - `web/static/` - JavaScript, CSS, and other static files
-  - `web/main.py` - FastAPI backend code
+  - `backend/` - Express server, routes, utils (NEW)
+  - `frontend/` - React components, hooks, services (NEW)
+  - `web/templates/` - HTML templates (OLD/DEPRECATED)
+  - `web/static/` - JavaScript, CSS, and other static files (OLD/DEPRECATED)
+  - `web/main.py` - FastAPI backend code (OLD/DEPRECATED)
   - `smithforge/` - Core processing scripts
   - `requirements.txt` - Python dependencies
+  - `backend/package.json` - Node.js dependencies (NEW)
+  - `frontend/package.json` - React dependencies (NEW)
   - Any other application code
 - When using sudo for Docker commands, read the sudo password from `~/.env` file (variable: `SUDO_PASSWORD`)
 
@@ -55,7 +113,18 @@ Use the Puppeteer MCP to test the web application at `http://localhost:8000`.
 
 ## Architecture
 
-### Request Flow
+### Request Flow (NEW - React + Express)
+1. User interacts with React SPA (`frontend/src/`)
+2. React uploads files to Express endpoint `POST /api/run-smithforge` (`backend/routes/smithforge.js`)
+3. Express saves files to `inputs/` and `inputs/bases/` directories
+4. Express calls `smithforge/smithforge.py` via Node.js subprocess (`backend/utils/subprocess.js`)
+5. SmithForge processes models using trimesh library
+6. Result is saved to `outputs/` directory
+7. Success: Express returns JSON with `{success: true, output_filename, download_url, log_lines}`
+8. Failure: Express returns JSON with `{success: false, error, log}`
+9. React updates UI dynamically with results or error messages
+
+### Request Flow (OLD - FastAPI/Jinja2) - DEPRECATED
 1. User uploads files via `web/templates/index.html` form
 2. FastAPI endpoint `/run-smithforge` in `web/main.py` receives the upload (web/main.py:77)
 3. Files are saved to `inputs/` and `inputs/bases/` directories
@@ -79,15 +148,35 @@ The `modify_3mf()` function performs these operations in sequence:
 10. Unions clipped Hueforge with base for final manifold
 11. Exports combined model as 3MF
 
-### Directory Structure
-- `web/` - FastAPI application and frontend
+### Directory Structure (NEW)
+- `backend/` - Express API server (Node.js)
+  - `server.js` - Main Express server, middleware, static serving
+  - `routes/` - API endpoints
+    - `preview.js` - `POST /api/preview-model` (3MF to GLB conversion)
+    - `layers.js` - `POST /api/get-layers` (layer extraction)
+    - `smithforge.js` - `POST /api/run-smithforge` (main processing)
+    - `bases.js` - `GET /api/bases` (list available base models)
+  - `utils/` - Helper modules
+    - `subprocess.js` - Python subprocess execution wrapper
+  - `package.json` - Node.js dependencies
+- `frontend/` - React SPA (Vite + Tailwind CSS)
+  - `src/` - React source code
+    - `components/` - React components (SplitLayout, Sidebar, ModelViewer, etc.)
+    - `hooks/` - Custom React hooks (useModelPreview, useLayerInfo, usePresets, etc.)
+    - `services/` - API client (axios wrapper)
+    - `App.jsx` - Main React app component
+    - `main.jsx` - React entry point
+  - `package.json` - React dependencies
+  - `vite.config.js` - Vite configuration
+  - `tailwind.config.js` - Tailwind CSS configuration
+- `web/` - OLD FastAPI app (DEPRECATED - will be removed)
   - `main.py` - FastAPI routes and subprocess orchestration
   - `templates/` - Jinja2 HTML templates (index, result, error)
   - `static/` - CSS and static assets
     - `presets.js` - Parameter presets management (localStorage)
     - `viewer.js` - Three.js 3D model viewer
     - `layer-viz.js` - Layer visualization JavaScript
-- `smithforge/` - Core processing submodule (git submodule)
+- `smithforge/` - Core processing submodule (git submodule) - UNCHANGED
   - `smithforge.py` - Main 3D model manipulation script
   - `layer_parser.py` - Extract layer information from 3MF files
   - `text_layer_parser.py` - Parse HueForge swap instructions text
@@ -96,6 +185,7 @@ The `modify_3mf()` function performs these operations in sequence:
 - `inputs/` - Uploaded Hueforge files (created at runtime)
   - `bases/` - Base model files (uploaded or defaults)
 - `outputs/` - Generated combined models (created at runtime)
+- `MIGRATION.md` - Detailed migration documentation and progress tracking
 
 ### Output Format Options
 
@@ -407,9 +497,66 @@ The text injection mode applies the same Z-offset as preserve mode:
 - Does not fail the build (warnings only)
 
 ## Technology Stack
+
+### NEW Stack (Active Development)
+- **Backend API**: Node.js + Express
+- **Frontend**: React 18 + Vite + Tailwind CSS
+- **3D Rendering**: Three.js (r160) with React components
+- **State Management**: React hooks + localStorage
+- **HTTP Client**: Axios
+- **3D Processing**: trimesh, shapely, manifold3d (Python subprocess) - UNCHANGED
+- **Containerization**: Docker + Docker Compose with multi-stage build
+
+### OLD Stack (Deprecated)
 - **Backend**: FastAPI + Uvicorn
-- **3D Processing**: trimesh, shapely, manifold3d
 - **Frontend**: Bootstrap 4, Font Awesome, Three.js (r160), vanilla JavaScript
-- **3D Rendering**: Three.js with WebGL, OrbitControls, GLTFLoader
 - **Templating**: Jinja2
+- **3D Processing**: trimesh, shapely, manifold3d
 - **Containerization**: Docker + Docker Compose (Python 3.9-slim base)
+
+## API Endpoints (NEW)
+
+All API endpoints are prefixed with `/api/`:
+
+- **`GET /api/health`** - Healthcheck endpoint
+  - Returns: `{"status": "ok", "timestamp": "2025-10-29T..."}`
+
+- **`GET /api/bases`** - List available base model files
+  - Returns: `{"bases": ["cml_base.3mf", ...], "count": 5}`
+
+- **`POST /api/preview-model`** - Convert 3MF to GLB for Three.js preview
+  - Accepts: FormData with `file` (3MF)
+  - Returns: Binary GLB file (`model/gltf-binary`)
+  - Implementation: `backend/routes/preview.js`
+
+- **`POST /api/get-layers`** - Extract layer information from Hueforge 3MF
+  - Accepts: FormData with `file` (3MF) and optional `z_shift` (float)
+  - Returns: JSON `{"layers": [...], "total_height": 5.6, "layer_count": 15, "has_colors": true, "format": "Bambu Lab"}`
+  - Implementation: `backend/routes/layers.js`
+
+- **`POST /api/run-smithforge`** - Main SmithForge processing
+  - Accepts: FormData with files and parameters (see smithforge.js for details)
+  - Returns: JSON `{"success": true, "output_filename": "...", "download_url": "/outputs/...", "log_lines": [...]}`
+  - Implementation: `backend/routes/smithforge.js`
+
+## Express Backend Details
+
+### Subprocess Execution (`backend/utils/subprocess.js`)
+- **`executePython(scriptPath, args)`** - Execute any Python script
+- **`executeSmithForge(params)`** - SmithForge-specific wrapper
+- **`cleanLogOutput(output)`** - Remove ANSI codes, format logs
+
+### File Handling
+- Uploads handled by `express-fileupload` middleware
+- Temp files stored in `/tmp/`
+- Automatic cleanup after processing
+- Static file serving for `/outputs`, `/bases`, `/inputs`
+
+### Error Handling
+- HTTP 400 for user errors (missing files, invalid params)
+- HTTP 500 for server errors (subprocess failures)
+- Enhanced error messages (e.g., suggests auto-repair for non-watertight meshes)
+
+## React Frontend (Planned)
+
+See `MIGRATION.md` for detailed component architecture and implementation plan.

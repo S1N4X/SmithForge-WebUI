@@ -299,6 +299,7 @@ async def run_smithforge(
         command.append("--scaledown")
 
     # Handle color layer mode
+    swap_text_file_path = None  # Track temp file for cleanup
     if color_mode == "preserve":
         command.append("--preserve-colors")
     elif color_mode == "inject":
@@ -311,8 +312,13 @@ async def run_smithforge(
             swap_text = file_content.decode('utf-8')
 
         if swap_text:
-            # Pass the text directly as an argument
-            command += ["--inject-colors-text", swap_text]
+            # Save swap text to a temporary file (smithforge.py expects a file path)
+            with tempfile.NamedTemporaryFile(mode='w', suffix='.txt', delete=False) as tmp_swap:
+                tmp_swap.write(swap_text)
+                swap_text_file_path = tmp_swap.name
+
+            # Pass the file path to smithforge.py
+            command += ["--inject-colors-text", swap_text_file_path]
         else:
             # No text provided - should show error but let smithforge handle it
             print("⚠️  Warning: Inject mode selected but no swap instructions provided")
@@ -337,69 +343,77 @@ async def run_smithforge(
     command += ["--output-format", output_format]
 
     # 4) Run the command with subprocess
-    process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
-    stdout, stderr = process.communicate()
-    exit_code = process.returncode
+    try:
+        process = subprocess.Popen(command, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+        stdout, stderr = process.communicate()
+        exit_code = process.returncode
 
-    result = {
-        "command": " ".join(command),
-        "exit_code": exit_code,
-        "stdout": stdout.decode("utf-8"),
-        "stderr": stderr.decode("utf-8"),
-        "success": exit_code == 0
-    }
+        result = {
+            "command": " ".join(command),
+            "exit_code": exit_code,
+            "stdout": stdout.decode("utf-8"),
+            "stderr": stderr.decode("utf-8"),
+            "success": exit_code == 0
+        }
 
-    # If successful, add the file path
-    if exit_code == 0:
-        # Clean and compact log lines
-        log_lines = []
-        for line in result["stdout"].split('\n'):
-            line = line.strip()
-            if line and not line.isspace():
-                # Remove duplicate "===" lines
-                if not (line.startswith('===') and log_lines and log_lines[-1].startswith('===')):
-                    # Remove redundant empty lines between sections
-                    if not (line.startswith('---') and log_lines and log_lines[-1].startswith('---')):
-                        log_lines.append(line)
+        # If successful, add the file path
+        if exit_code == 0:
+            # Clean and compact log lines
+            log_lines = []
+            for line in result["stdout"].split('\n'):
+                line = line.strip()
+                if line and not line.isspace():
+                    # Remove duplicate "===" lines
+                    if not (line.startswith('===') and log_lines and log_lines[-1].startswith('===')):
+                        # Remove redundant empty lines between sections
+                        if not (line.startswith('---') and log_lines and log_lines[-1].startswith('---')):
+                            log_lines.append(line)
 
-        result["output_file"] = output_path
-        #DEV: result_image_url = f"/outputs/{result_image_name}"
-        return templates.TemplateResponse(
-            "result.html",
-            {
-                "request": request,
-                "result": result,
+            result["output_file"] = output_path
+
+            # Return JSON for AJAX request
+            return JSONResponse(content={
+                "success": True,
+                "output_filename": output_name,
+                "download_url": f"/outputs/{output_name}",
                 "log_lines": log_lines,
-                "download_url": f"/outputs/{output_name}",  # Updated path
-                #DEV: "result_image_url": result_image_url,  # Add result image URL
-                "hueforge_file": hueforge_file.filename,
-                "base_file": base_file.filename if base_file else default_base,
-                "output_name": output_name,
-                "rotate_base": rotate_base,
-                "force_scale": force_scale_val,
-                "scaledown": scaledown,
-                "xshift": xshift_val,
-                "yshift": yshift_val,
-                "zshift": zshift_val,
-                "color_mode": color_mode,
-                "auto_repair": auto_repair,
-                "fill_gaps": fill_gaps,
-                "output_format": output_format
-            }
-        )
-    else:
-        error_message = "An error occurred during processing"
-        if "Not all meshes are volumes" in result["stderr"]:
-            error_message = "not watertight"
+                "parameters": {
+                    "hueforge_file": hueforge_file.filename,
+                    "base_file": base_file.filename if base_file else default_base,
+                    "output_name": output_name,
+                    "rotate_base": rotate_base,
+                    "force_scale": force_scale_val,
+                    "scaledown": scaledown,
+                    "xshift": xshift_val,
+                    "yshift": yshift_val,
+                    "zshift": zshift_val,
+                    "color_mode": color_mode,
+                    "auto_repair": auto_repair,
+                    "fill_gaps": fill_gaps,
+                    "output_format": output_format
+                }
+            })
+        else:
+            error_message = "An error occurred during processing"
+            if "Not all meshes are volumes" in result["stderr"]:
+                error_message = "Input models are not watertight. Enable auto-repair to fix this."
 
-        return templates.TemplateResponse(
-            "error.html",
-            {
-                "request": request,
-                "error": error_message,
-                "log": result["stderr"]  # Pass the stderr log to the template
-            }
-        )
+            # Return JSON error for AJAX request
+            return JSONResponse(
+                status_code=400,
+                content={
+                    "success": False,
+                    "error": error_message,
+                    "log": result["stderr"]
+                }
+            )
+    finally:
+        # Clean up temporary swap instructions file
+        if swap_text_file_path and os.path.exists(swap_text_file_path):
+            try:
+                os.unlink(swap_text_file_path)
+            except Exception as e:
+                print(f"⚠️  Warning: Could not delete temp file {swap_text_file_path}: {e}")
 
 if __name__ == "__main__":
     # For local testing only
