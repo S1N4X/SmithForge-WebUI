@@ -16,7 +16,7 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 - **Migration Documentation**: See `MIGRATION.md` for detailed progress and architecture
 - **Old Architecture**: FastAPI serves HTML templates (lines 56-151 below)
 - **New Architecture**: Express API + React frontend calling smithforge.py subprocess
-- **Testing**: Still use Puppeteer MCP at `http://localhost:8000`
+- **Testing**: Use Puppeteer MCP at `http://localhost:3001`
 
 ### Current Phase
 ✅ **Phase 1 Complete**: Express backend API fully implemented
@@ -42,42 +42,8 @@ SmithForge-WebUI is a web-based interface for combining 3MF models by overlaying
 
 ## Build and Run Commands
 
-### Local Development (NEW - React + Express)
-```bash
-# Install backend dependencies
-cd backend
-npm install
-
-# Install frontend dependencies
-cd ../frontend
-npm install
-
-# Run backend server (from backend/ directory)
-npm start
-# or for development with auto-reload:
-npm run dev
-
-# Run frontend dev server (from frontend/ directory)
-npm run dev
-
-# The frontend dev server proxies API requests to backend on port 8000
-# Frontend will be available at http://localhost:5173 (Vite default)
-# Backend API at http://localhost:8000
-```
-
-### Local Development (OLD - FastAPI/Jinja2) - DEPRECATED
-```bash
-# Install dependencies
-pip install -r requirements.txt
-
-# Run the web server locally
-python -m uvicorn web.main:app --host 0.0.0.0 --port 8000
-
-# Or run directly
-python web/main.py
-```
-
-### Docker Deployment
+### Docker Development (REQUIRED)
+**IMPORTANT**: Always use Docker for development and testing. Docker includes Bambu Studio CLI and ensures consistent environment.
 ```bash
 # Build and start the container
 docker-compose up --build -d
@@ -92,24 +58,22 @@ docker-compose logs -f
 docker-compose down && docker-compose up --build -d
 ```
 
-The web interface will be available at `http://localhost:8000`.
+The web interface will be available at `http://localhost:3001`.
 
 **IMPORTANT**:
-- **After making any changes that need to be tested**, you must rebuild the Docker container for changes to take effect. This includes modifications to:
-  - `backend/` - Express server, routes, utils (NEW)
-  - `frontend/` - React components, hooks, services (NEW)
-  - `web/templates/` - HTML templates (OLD/DEPRECATED)
-  - `web/static/` - JavaScript, CSS, and other static files (OLD/DEPRECATED)
-  - `web/main.py` - FastAPI backend code (OLD/DEPRECATED)
+- **Always rebuild Docker after changes**: Any code changes require rebuilding the container
+- Changes include:
+  - `backend/` - Express server, routes, utils
+  - `frontend/` - React components, hooks, services
   - `smithforge/` - Core processing scripts
   - `requirements.txt` - Python dependencies
-  - `backend/package.json` - Node.js dependencies (NEW)
-  - `frontend/package.json` - React dependencies (NEW)
-  - Any other application code
-- When using sudo for Docker commands, read the sudo password from `~/.env` file (variable: `SUDO_PASSWORD`)
+  - `backend/package.json` - Node.js dependencies
+  - `frontend/package.json` - React dependencies
+- When using sudo for Docker commands, read the sudo password from `.env` file in project root (variable: `SUDO_PASSWORD`)
+- **Do NOT use local dev servers** - Docker is required for Bambu Studio CLI support
 
 ### Testing with Puppeteer MCP
-Use the Puppeteer MCP to test the web application at `http://localhost:8000`.
+Use the Puppeteer MCP to test the web application at `http://localhost:3001`.
 
 ## Architecture
 
@@ -181,7 +145,7 @@ The `modify_3mf()` function performs these operations in sequence:
   - `layer_parser.py` - Extract layer information from 3MF files
   - `text_layer_parser.py` - Parse HueForge swap instructions text
   - `repair.py` - Mesh validation and repair module
-  - `lib3mf_exporter.py` - Bambu Studio compatible 3MF exporter using lib3mf C++
+  - `lib3mf_exporter.py` - (Unused) Alternative lib3mf-based exporter
 - `inputs/` - Uploaded Hueforge files (created at runtime)
   - `bases/` - Base model files (uploaded or defaults)
 - `outputs/` - Generated combined models (created at runtime)
@@ -199,19 +163,21 @@ SmithForge supports two output formats for maximum compatibility:
 - **Use Case**: General purpose, maximum compatibility
 
 #### Bambu Studio 3MF
-- **Export Method**: lib3mf C++ library with Production Extension
+- **Export Method**: Bambu Studio CLI (`bambu-studio` command with `--export-3mf` flag)
 - **Compatibility**: Optimized for Bambu Studio and Bambu Lab printers
-- **Structure**: Component-based 3MF with proper Production Extension namespace
-- **Color Metadata**: Integrated during export with proper XML structure
-- **Use Case**: When targeting Bambu Studio specifically, or when "No such node (objects)" errors occur with standard format
-- **Fallback**: Automatically falls back to standard export if lib3mf is unavailable
+- **Structure**: Proper Bambu Studio 3MF format generated via official CLI
+- **Color Metadata**: Injected post-export via ZIP manipulation (same as standard format)
+- **Use Case**: When targeting Bambu Studio specifically
+- **Requirements**: Bambu Studio AppImage must be installed (included in Docker, optional for local dev)
 
 **Implementation Details:**
 - Format selection available in web UI dropdown (Output Settings section)
 - Passed via `--output-format` parameter (choices: `standard`, `bambu`)
-- Export logic in `smithforge.py:706-742` branches based on format
-- Bambu export delegated to `lib3mf_exporter.Lib3mfExporter` class
-- lib3mf CLI tool installed in Docker container during build
+- Export logic in `smithforge.py:1180-1229` branches based on format
+- Bambu export uses `export_with_bambustudio_cli()` function (smithforge.py:680-756)
+- Bambu Studio AppImage installed in Docker container at `/opt/bambustudio`
+- Symlink at `/usr/local/bin/bambu-studio` provides CLI access
+- **Docker Required**: Bambu format only works in Docker (Bambu Studio CLI included in container)
 
 ### Key Parameters
 - `--rotatebase` - Rotate base model (degrees)
@@ -227,7 +193,7 @@ SmithForge supports two output formats for maximum compatibility:
 
 ## Important Constraints
 
-1. **Port Configuration**: Never change the service port (8000) as specified in docker-compose.yaml and Dockerfile
+1. **Port Configuration**: Never change the service port (3001) as specified in docker-compose.yaml and Dockerfile
 2. **Z-axis Preservation**: The Z-axis of Hueforge models must never be scaled - this maintains the color layer integrity
 3. **Manifold Geometry**: Both input models must have proper manifold geometry for boolean operations to succeed
 4. **File Paths**: The subprocess call to smithforge.py uses relative path `smithforge/smithforge.py` (lowercase), not `SmithForge/smithforge.py`

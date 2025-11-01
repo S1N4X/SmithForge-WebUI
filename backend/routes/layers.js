@@ -21,24 +21,36 @@ router.post('/', async (req, res) => {
 
     const file = req.files.file;
     const zShift = parseFloat(req.body.z_shift || 0.0);
-    const tempPath = file.tempFilePath;
+
+    // Create properly named temp file with .3mf extension
+    const timestamp = Date.now();
+    const tempPath = path.join('/tmp', `layers_input_${timestamp}.3mf`);
+
+    // Copy uploaded file to temp file with .3mf extension
+    await fs.copyFile(file.tempFilePath, tempPath);
+
+    // Clean up original temp file
+    await fs.unlink(file.tempFilePath).catch(() => {});
 
     // Create Python script to extract layers
     const extractorScript = `
 import sys
 import json
 sys.path.insert(0, '${projectRoot}')
-from smithforge.layer_parser import extract_layers, adjust_layers_for_zshift
+from smithforge.layer_parser import parse_3mf_layers, adjust_layers_for_zshift, serialize_layers
 
 try:
-    # Extract layers from 3MF
-    layer_data = extract_layers('${tempPath}')
+    # Parse layers from 3MF
+    layer_data = parse_3mf_layers('${tempPath}')
 
     # Adjust for Z-shift if provided
     if ${zShift} != 0.0:
-        layer_data = adjust_layers_for_zshift(layer_data, ${zShift})
+        # Adjust layers and update the layer_data dict
+        layer_data['layers'] = adjust_layers_for_zshift(layer_data.get('layers', []), ${zShift})
 
-    print(json.dumps(layer_data))
+    # Serialize to JSON-compatible format
+    result = serialize_layers(layer_data)
+    print(json.dumps(result))
 except Exception as e:
     print(json.dumps({"error": str(e)}), file=sys.stderr)
     sys.exit(1)
@@ -47,7 +59,7 @@ except Exception as e:
     const scriptPath = path.join('/tmp', `layer_extractor_${Date.now()}.py`);
     await fs.writeFile(scriptPath, extractorScript);
 
-    const result = await executePython(scriptPath.replace(path.dirname(scriptPath) + '/', ''), []);
+    const result = await executePython(scriptPath, []);
 
     // Clean up
     await fs.unlink(scriptPath).catch(() => {});

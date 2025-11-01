@@ -25,7 +25,8 @@ app.use(fileUpload({
   useTempFiles: true,
   tempFileDir: '/tmp/',
   limits: { fileSize: 500 * 1024 * 1024 }, // 500MB max file size
-  abortOnLimit: true
+  abortOnLimit: true,
+  preserveExtension: true  // Preserve file extensions for trimesh compatibility
 }));
 
 // Static file serving

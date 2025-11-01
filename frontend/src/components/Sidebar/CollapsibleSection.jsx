@@ -1,13 +1,13 @@
 export default function CollapsibleSection({ title, expanded, onToggle, children }) {
   return (
-    <div className="border border-gray-200 rounded overflow-hidden">
+    <div className="border border-gray-200 dark:border-gray-700 rounded overflow-hidden">
       <button
         onClick={onToggle}
-        className="w-full px-2 py-1 bg-gray-50 hover:bg-gray-100 flex justify-between items-center transition-colors"
+        className="w-full px-2 py-1 bg-gray-50 dark:bg-gray-700 hover:bg-gray-100 dark:hover:bg-gray-600 flex justify-between items-center transition-colors"
       >
-        <span className="font-semibold text-xs text-gray-700">{title}</span>
+        <span className="font-semibold text-xs text-gray-700 dark:text-gray-200">{title}</span>
         <svg
-          className={`w-3 h-3 transform transition-transform ${
+          className={`w-3 h-3 transform transition-transform text-gray-700 dark:text-gray-200 ${
             expanded ? 'rotate-180' : ''
           }`}
           fill="none"
@@ -22,7 +22,7 @@ export default function CollapsibleSection({ title, expanded, onToggle, children
           />
         </svg>
       </button>
-      {expanded && <div className="p-2 bg-white">{children}</div>}
+      {expanded && <div className="p-2 bg-white dark:bg-gray-700">{children}</div>}
     </div>
   );
 }

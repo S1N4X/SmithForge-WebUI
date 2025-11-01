@@ -5,6 +5,7 @@ import ColorSettings from './ColorSettings';
 import OutputSettings from './OutputSettings';
 import PresetManager from './PresetManager';
 import LayerVisualization from '../LayerVisualization/LayerVisualization';
+import LogsDisplay from './LogsDisplay';
 import { smithForgeAPI } from '../../services/api';
 
 export default function Sidebar({
@@ -21,6 +22,9 @@ export default function Sidebar({
   setResult,
   setError,
   setLogs,
+  result,
+  error,
+  logs,
 }) {
   const [expandedSections, setExpandedSections] = useState({
     files: true,
@@ -90,15 +94,22 @@ export default function Sidebar({
   return (
     <div className="p-2 space-y-1">
       <div className="flex items-center justify-between mb-2">
-        <h1 className="text-lg font-bold text-gray-800">SmithForge</h1>
+        <h1 className="text-lg font-bold text-gray-800 dark:text-gray-100">SmithForge</h1>
         <button
           onClick={handleProcess}
           disabled={processing || !hueforgeFile || (!baseFile && !selectedDefaultBase)}
-          className="px-4 py-1 text-sm bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-400 disabled:cursor-not-allowed transition-colors font-semibold"
+          className="px-4 py-1 text-sm bg-blue-600 dark:bg-blue-500 text-white rounded hover:bg-blue-700 dark:hover:bg-blue-600 disabled:bg-gray-400 dark:disabled:bg-gray-600 disabled:cursor-not-allowed transition-colors font-semibold"
         >
           {processing ? 'Processing...' : 'Generate'}
         </button>
       </div>
+
+      <LogsDisplay
+        processing={processing}
+        result={result}
+        error={error}
+        logs={logs}
+      />
 
       <PresetManager
         expanded={expandedSections.presets}

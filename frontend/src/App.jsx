@@ -3,7 +3,7 @@ import './App.css';
 import SplitLayout from './components/SplitLayout';
 import Sidebar from './components/Sidebar/Sidebar';
 import ModelViewer from './components/ModelViewer/ModelViewer';
-import StatusBar from './components/StatusBar';
+import DarkModeToggle from './components/DarkModeToggle';
 
 function App() {
   // Global state
@@ -31,7 +31,12 @@ function App() {
   const [logs, setLogs] = useState([]);
 
   return (
-    <div className="h-screen w-screen overflow-hidden bg-gray-100">
+    <div className="h-screen w-screen overflow-hidden bg-gray-100 dark:bg-gray-900">
+      {/* Dark Mode Toggle - Fixed top-right */}
+      <div className="absolute top-4 right-4 z-50">
+        <DarkModeToggle />
+      </div>
+
       <SplitLayout
         sidebar={
           <Sidebar
@@ -48,6 +53,9 @@ function App() {
             setResult={setResult}
             setError={setError}
             setLogs={setLogs}
+            result={result}
+            error={error}
+            logs={logs}
           />
         }
         main={
@@ -57,14 +65,6 @@ function App() {
             selectedDefaultBase={selectedDefaultBase}
             params={params}
             result={result}
-          />
-        }
-        statusBar={
-          <StatusBar
-            processing={processing}
-            result={result}
-            error={error}
-            logs={logs}
           />
         }
       />

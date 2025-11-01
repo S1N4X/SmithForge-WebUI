@@ -14,7 +14,7 @@ const projectRoot = path.resolve(__dirname, '..', '..');
  */
 export function executePython(scriptPath, args = []) {
   return new Promise((resolve, reject) => {
-    const fullScriptPath = path.join(projectRoot, scriptPath);
+    const fullScriptPath = path.isAbsolute(scriptPath) ? scriptPath : path.join(projectRoot, scriptPath);
     const pythonProcess = spawn('python3', [fullScriptPath, ...args], {
       cwd: projectRoot
     });

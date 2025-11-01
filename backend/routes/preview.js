@@ -20,8 +20,17 @@ router.post('/', async (req, res) => {
     }
 
     const file = req.files.file;
-    const tempInputPath = file.tempFilePath;
-    const tempOutputPath = tempInputPath.replace('.3mf', '.glb');
+
+    // Create properly named temp files with extensions
+    const timestamp = Date.now();
+    const tempInputPath = path.join('/tmp', `preview_input_${timestamp}.3mf`);
+    const tempOutputPath = path.join('/tmp', `preview_output_${timestamp}.glb`);
+
+    // Copy uploaded file to temp file with .3mf extension
+    await fs.copyFile(file.tempFilePath, tempInputPath);
+
+    // Clean up original temp file
+    await fs.unlink(file.tempFilePath).catch(() => {});
 
     // Create a small Python script to convert 3MF to GLB using trimesh
     const converterScript = `
@@ -49,7 +58,7 @@ except Exception as e:
     await fs.writeFile(scriptPath, converterScript);
 
     // Execute conversion
-    const result = await executePython(scriptPath.replace(path.dirname(scriptPath) + '/', ''), []);
+    const result = await executePython(scriptPath, []);
 
     if (result.exitCode !== 0) {
       await fs.unlink(scriptPath).catch(() => {});

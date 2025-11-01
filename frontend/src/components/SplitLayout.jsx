@@ -3,7 +3,7 @@ import { useState } from 'react';
 /**
  * Split-pane layout with resizable sidebar
  */
-export default function SplitLayout({ sidebar, main, statusBar }) {
+export default function SplitLayout({ sidebar, main }) {
   const [sidebarWidth, setSidebarWidth] = useState(400); // px
   const [isDragging, setIsDragging] = useState(false);
 
@@ -26,34 +26,27 @@ export default function SplitLayout({ sidebar, main, statusBar }) {
 
   return (
     <div
-      className="flex flex-col h-full"
+      className="flex h-full"
       onMouseMove={handleMouseMove}
       onMouseUp={handleMouseUp}
     >
-      <div className="flex flex-1 overflow-hidden">
-        {/* Sidebar */}
-        <div
-          className="bg-white shadow-lg overflow-y-auto"
-          style={{ width: `${sidebarWidth}px`, minWidth: '300px', maxWidth: '600px' }}
-        >
-          {sidebar}
-        </div>
-
-        {/* Resizer */}
-        <div
-          className="w-1 bg-gray-300 hover:bg-blue-500 cursor-col-resize transition-colors"
-          onMouseDown={handleMouseDown}
-        />
-
-        {/* Main content area */}
-        <div className="flex-1 overflow-hidden bg-gray-900">
-          {main}
-        </div>
+      {/* Sidebar */}
+      <div
+        className="bg-white dark:bg-gray-800 shadow-lg overflow-y-auto"
+        style={{ width: `${sidebarWidth}px`, minWidth: '300px', maxWidth: '600px' }}
+      >
+        {sidebar}
       </div>
 
-      {/* Status bar */}
-      <div className="h-auto bg-gray-800 text-white">
-        {statusBar}
+      {/* Resizer */}
+      <div
+        className="w-1 bg-gray-300 dark:bg-gray-600 hover:bg-blue-500 dark:hover:bg-blue-400 cursor-col-resize transition-colors"
+        onMouseDown={handleMouseDown}
+      />
+
+      {/* Main content area */}
+      <div className="flex-1 overflow-hidden bg-gray-900 dark:bg-black">
+        {main}
       </div>
     </div>
   );
