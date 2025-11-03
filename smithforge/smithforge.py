@@ -859,12 +859,20 @@ def sample_perimeter_height(mesh, num_samples=40):
     hist, bins = np.histogram(z_heights, bins=min(10, len(z_heights)//2))
     mode_bin_idx = np.argmax(hist)
 
-    # Return the center of the most common bin
-    background_height = (bins[mode_bin_idx] + bins[mode_bin_idx + 1]) / 2.0
+    # Get the maximum value from samples in the mode bin (not bin center)
+    # This ensures fill geometry reaches the full height of the perimeter
+    bin_mask = (z_heights >= bins[mode_bin_idx]) & (z_heights <= bins[mode_bin_idx + 1])
+    background_height = z_heights[bin_mask].max()
+
+    # Calculate what the old method would have returned for comparison
+    bin_center = (bins[mode_bin_idx] + bins[mode_bin_idx + 1]) / 2.0
 
     print(f"📏 Sampled {len(z_heights)} Z-heights from perimeter")
-    print(f"📏 Detected background height: {background_height:.3f} mm")
+    print(f"📏 Mode bin: [{bins[mode_bin_idx]:.3f}, {bins[mode_bin_idx + 1]:.3f}] mm ({hist[mode_bin_idx]} samples)")
+    print(f"📏 Detected background height: {background_height:.3f} mm (max of mode bin)")
     print(f"📏 Height range: {z_heights.min():.3f} to {z_heights.max():.3f} mm")
+    if abs(background_height - bin_center) > 0.01:
+        print(f"   Note: Using max of mode bin instead of center (center would be {bin_center:.3f} mm)")
 
     return background_height
 
