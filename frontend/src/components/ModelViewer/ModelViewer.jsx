@@ -55,93 +55,30 @@ export default function ModelViewer({ hueforgeFile, baseFile, selectedDefaultBas
     controls.maxDistance = 1000;
     controlsRef.current = controls;
 
-    // ULTRA-AGGRESSIVE RELIEF LIGHTING - MAXIMUM CONTRAST
-    // Almost no ambient light to maximize shadow depth
-    const ambientLight = new THREE.AmbientLight(0xffffff, 0.05); // Reduced to 5%!
+    // CONVENTIONAL BALANCED LIGHTING
+    // Ambient light for overall illumination
+    const ambientLight = new THREE.AmbientLight(0xffffff, 0.4); // 40% ambient
     scene.add(ambientLight);
 
-    // ULTRA-LOW GRAZING SPOTLIGHT 1 - RIGHT (almost parallel to surface!)
-    const grazingSpot1 = new THREE.SpotLight(0xffffff, 5.0); // DOUBLED intensity
-    grazingSpot1.position.set(200, 2, 0); // Y=2 is ULTRA LOW - almost touching surface!
-    grazingSpot1.target.position.set(0, 0, 0);
-    grazingSpot1.angle = Math.PI / 6; // Wider cone for more coverage
-    grazingSpot1.penumbra = 0.2;
-    grazingSpot1.decay = 0.8;
-    grazingSpot1.distance = 500;
-    grazingSpot1.castShadow = true;
-    grazingSpot1.shadow.mapSize.width = 8192; // ULTRA HIGH resolution shadows
-    grazingSpot1.shadow.mapSize.height = 8192;
-    grazingSpot1.shadow.camera.near = 0.1;
-    grazingSpot1.shadow.camera.far = 500;
-    grazingSpot1.shadow.bias = -0.0005; // Fine-tune shadow acne
-    scene.add(grazingSpot1);
-    scene.add(grazingSpot1.target);
+    // PRIMARY DIRECTIONAL LIGHT - Upper right front
+    const directionalLight1 = new THREE.DirectionalLight(0xffffff, 0.6);
+    directionalLight1.position.set(100, 100, 50);
+    directionalLight1.castShadow = true;
+    directionalLight1.shadow.mapSize.width = 2048;
+    directionalLight1.shadow.mapSize.height = 2048;
+    directionalLight1.shadow.camera.near = 0.5;
+    directionalLight1.shadow.camera.far = 500;
+    scene.add(directionalLight1);
 
-    // ULTRA-LOW GRAZING SPOTLIGHT 2 - LEFT
-    const grazingSpot2 = new THREE.SpotLight(0xffffee, 4.5); // Warm tint
-    grazingSpot2.position.set(-200, 3, 0); // Slightly different height for variety
-    grazingSpot2.target.position.set(0, 0, 0);
-    grazingSpot2.angle = Math.PI / 6;
-    grazingSpot2.penumbra = 0.2;
-    grazingSpot2.decay = 0.8;
-    grazingSpot2.distance = 500;
-    grazingSpot2.castShadow = true;
-    grazingSpot2.shadow.mapSize.width = 8192;
-    grazingSpot2.shadow.mapSize.height = 8192;
-    grazingSpot2.shadow.camera.near = 0.1;
-    grazingSpot2.shadow.camera.far = 500;
-    grazingSpot2.shadow.bias = -0.0005;
-    scene.add(grazingSpot2);
-    scene.add(grazingSpot2.target);
+    // FILL LIGHT - Lower left back (softer)
+    const directionalLight2 = new THREE.DirectionalLight(0xffffff, 0.3);
+    directionalLight2.position.set(-100, -100, -50);
+    scene.add(directionalLight2);
 
-    // ULTRA-LOW GRAZING SPOTLIGHT 3 - FRONT
-    const grazingSpot3 = new THREE.SpotLight(0xeeffff, 4.0); // Cool tint
-    grazingSpot3.position.set(0, 2.5, 200);
-    grazingSpot3.target.position.set(0, 0, 0);
-    grazingSpot3.angle = Math.PI / 6;
-    grazingSpot3.penumbra = 0.2;
-    grazingSpot3.decay = 0.8;
-    grazingSpot3.distance = 500;
-    grazingSpot3.castShadow = true;
-    grazingSpot3.shadow.mapSize.width = 8192;
-    grazingSpot3.shadow.mapSize.height = 8192;
-    grazingSpot3.shadow.bias = -0.0005;
-    scene.add(grazingSpot3);
-    scene.add(grazingSpot3.target);
-
-    // ULTRA-LOW GRAZING SPOTLIGHT 4 - BACK
-    const grazingSpot4 = new THREE.SpotLight(0xffffff, 3.5);
-    grazingSpot4.position.set(0, 2, -200);
-    grazingSpot4.target.position.set(0, 0, 0);
-    grazingSpot4.angle = Math.PI / 6;
-    grazingSpot4.penumbra = 0.2;
-    grazingSpot4.decay = 0.8;
-    grazingSpot4.distance = 500;
-    grazingSpot4.castShadow = true;
-    grazingSpot4.shadow.mapSize.width = 8192;
-    grazingSpot4.shadow.mapSize.height = 8192;
-    grazingSpot4.shadow.bias = -0.0005;
-    scene.add(grazingSpot4);
-    scene.add(grazingSpot4.target);
-
-    // RIM LIGHTING - Additional ultra-low lights for edge emphasis
-    const rimLight1 = new THREE.SpotLight(0xffccaa, 3.0);
-    rimLight1.position.set(150, 1, 150); // SUPER LOW diagonal position
-    rimLight1.target.position.set(0, 0, 0);
-    rimLight1.angle = Math.PI / 4;
-    rimLight1.penumbra = 0.5;
-    scene.add(rimLight1);
-    scene.add(rimLight1.target);
-
-    const rimLight2 = new THREE.SpotLight(0xaaccff, 3.0);
-    rimLight2.position.set(-150, 1, -150); // Opposite diagonal
-    rimLight2.target.position.set(0, 0, 0);
-    rimLight2.angle = Math.PI / 4;
-    rimLight2.penumbra = 0.5;
-    scene.add(rimLight2);
-    scene.add(rimLight2.target);
-
-    // NO overhead fill light - we want maximum contrast!
+    // RIM LIGHT - Side lighting for depth
+    const directionalLight3 = new THREE.DirectionalLight(0xffffff, 0.25);
+    directionalLight3.position.set(-50, 50, 100);
+    scene.add(directionalLight3);
 
     // Add grid helper
     const gridHelper = new THREE.GridHelper(200, 20, 0x666666, 0x444444);
@@ -225,6 +162,9 @@ export default function ModelViewer({ hueforgeFile, baseFile, selectedDefaultBas
                 emissive: 0x000000,
                 flatShading: false,  // Smooth shading shows relief better
                 reflectivity: 1.0,
+                transparent: true,  // Enable transparency
+                opacity: 0.5,  // 50% transparent to reveal delicate Hueforge overlay
+                side: THREE.DoubleSide,  // Render both sides for better transparency
               });
               child.castShadow = true;
               child.receiveShadow = true;
@@ -286,24 +226,24 @@ export default function ModelViewer({ hueforgeFile, baseFile, selectedDefaultBas
 
               // Check if material has a color map or vertex colors
               if (hasVertexColors || (originalMaterial && originalMaterial.map)) {
-                // Preserve original material but make it slightly transparent
+                // Preserve original material - fully opaque for better color visibility
                 if (originalMaterial) {
                   child.material = originalMaterial.clone();
-                  child.material.transparent = true;
-                  child.material.opacity = 0.9;
+                  child.material.transparent = false;
+                  child.material.opacity = 1.0;
                   child.material.vertexColors = hasVertexColors;
                   // Adjust properties for better relief
                   if (child.material.metalness !== undefined) child.material.metalness = 0.1;
                   if (child.material.roughness !== undefined) child.material.roughness = 0.8;
                 }
               } else {
-                // Fallback to blue if no colors found
+                // Fallback to blue if no colors found - fully opaque
                 child.material = new THREE.MeshPhongMaterial({
                   color: 0x4a90e2,
                   specular: 0xffffff,  // BRIGHT specular for relief visibility
                   shininess: 200,  // ULTRA HIGH for maximum edge definition
-                  transparent: true,
-                  opacity: 0.85,
+                  transparent: false,
+                  opacity: 1.0,
                   emissive: 0x000000,
                   reflectivity: 1.0,
                 });
