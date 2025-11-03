@@ -343,13 +343,32 @@ export default function ModelViewer({ hueforgeFile, baseFile, selectedDefaultBas
           const model = gltf.scene;
           model.traverse((child) => {
             if (child.isMesh) {
-              child.material = new THREE.MeshPhongMaterial({
-                color: 0x50c878,
-                specular: 0xffffff,  // BRIGHT specular for relief visibility
-                shininess: 150,  // HIGH shininess for sharp relief highlights
-                emissive: 0x000000,
-                reflectivity: 1.0,
-              });
+              // Preserve original colors from merged 3MF if they exist
+              const hasVertexColors = child.geometry.attributes.color !== undefined;
+              const originalMaterial = child.material;
+
+              // Check if material has a color map or vertex colors
+              if (hasVertexColors || (originalMaterial && originalMaterial.map)) {
+                // Preserve original material
+                if (originalMaterial) {
+                  child.material = originalMaterial.clone();
+                  child.material.transparent = false;
+                  child.material.opacity = 1.0;
+                  child.material.vertexColors = hasVertexColors;
+                  // Adjust properties for better relief visibility
+                  if (child.material.metalness !== undefined) child.material.metalness = 0.1;
+                  if (child.material.roughness !== undefined) child.material.roughness = 0.8;
+                }
+              } else {
+                // Fallback to green if no colors found
+                child.material = new THREE.MeshPhongMaterial({
+                  color: 0x50c878,
+                  specular: 0xffffff,  // BRIGHT specular for relief visibility
+                  shininess: 150,  // HIGH shininess for sharp relief highlights
+                  emissive: 0x000000,
+                  reflectivity: 1.0,
+                });
+              }
               child.castShadow = true;
               child.receiveShadow = true;
             }
