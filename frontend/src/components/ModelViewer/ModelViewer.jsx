@@ -6,6 +6,67 @@ import { smithForgeAPI } from '../../services/api';
 
 const DEFAULT_EMBEDDING_OVERLAP_MM = 0.1;
 
+// Helper: Convert hex color to RGB (0-1 range for Three.js)
+function hexToRgb(hex) {
+  const result = /^#?([a-f\d]{2})([a-f\d]{2})([a-f\d]{2})$/i.exec(hex);
+  return result ? {
+    r: parseInt(result[1], 16) / 255,
+    g: parseInt(result[2], 16) / 255,
+    b: parseInt(result[3], 16) / 255
+  } : { r: 0.5, g: 0.5, b: 0.5 }; // Gray fallback
+}
+
+// Helper: Find which layer a given Z-height belongs to
+function getColorForZ(z, layers) {
+  if (!layers || layers.length === 0) {
+    return { r: 0.5, g: 0.5, b: 0.5 }; // Gray fallback
+  }
+
+  // Sort layers by z_height (ascending)
+  const sortedLayers = [...layers].sort((a, b) => a.z_height - b.z_height);
+
+  // Find the layer this Z belongs to
+  for (let i = 0; i < sortedLayers.length; i++) {
+    if (z <= sortedLayers[i].z_height) {
+      return hexToRgb(sortedLayers[i].color || '#6c757d');
+    }
+  }
+
+  // If Z exceeds all layers, use last layer color
+  return hexToRgb(sortedLayers[sortedLayers.length - 1]?.color || '#6c757d');
+}
+
+// Helper: Apply layer-based vertex colors to a mesh
+function applyLayerColorsToMesh(mesh, layers) {
+  const geometry = mesh.geometry;
+  const positionAttr = geometry.attributes.position;
+  const vertexCount = positionAttr.count;
+
+  // Create color buffer (RGB for each vertex)
+  const colors = new Float32Array(vertexCount * 3);
+
+  for (let i = 0; i < vertexCount; i++) {
+    // Get vertex Z position
+    // Note: Model is rotated -90° around X, so Y becomes vertical axis
+    const vertexZ = positionAttr.getY(i);
+
+    // Find which layer this vertex belongs to
+    const layerColor = getColorForZ(vertexZ, layers);
+
+    // Set RGB values (normalized 0-1)
+    colors[i * 3] = layerColor.r;
+    colors[i * 3 + 1] = layerColor.g;
+    colors[i * 3 + 2] = layerColor.b;
+  }
+
+  // Apply color attribute to geometry
+  geometry.setAttribute('color', new THREE.BufferAttribute(colors, 3));
+
+  // Update material to use vertex colors
+  mesh.material.vertexColors = true;
+  mesh.material.needsUpdate = true;
+}
+
 export default function ModelViewer({ hueforgeFile, baseFile, selectedDefaultBase, params, result }) {
   const containerRef = useRef(null);
   const sceneRef = useRef(null);
@@ -335,44 +396,50 @@ export default function ModelViewer({ hueforgeFile, baseFile, selectedDefaultBas
         const url = URL.createObjectURL(glbBlob);
 
         const loader = new GLTFLoader();
-        loader.load(url, (gltf) => {
+        loader.load(url, async (gltf) => {
           if (resultModelRef.current) {
             sceneRef.current.remove(resultModelRef.current);
           }
 
           const model = gltf.scene;
+
+          // First, set up basic materials for all meshes
           model.traverse((child) => {
             if (child.isMesh) {
-              // Preserve original colors from merged 3MF if they exist
-              const hasVertexColors = child.geometry.attributes.color !== undefined;
-              const originalMaterial = child.material;
-
-              // Check if material has a color map or vertex colors
-              if (hasVertexColors || (originalMaterial && originalMaterial.map)) {
-                // Preserve original material
-                if (originalMaterial) {
-                  child.material = originalMaterial.clone();
-                  child.material.transparent = false;
-                  child.material.opacity = 1.0;
-                  child.material.vertexColors = hasVertexColors;
-                  // Adjust properties for better relief visibility
-                  if (child.material.metalness !== undefined) child.material.metalness = 0.1;
-                  if (child.material.roughness !== undefined) child.material.roughness = 0.8;
-                }
-              } else {
-                // Fallback to green if no colors found
-                child.material = new THREE.MeshPhongMaterial({
-                  color: 0x50c878,
-                  specular: 0xffffff,  // BRIGHT specular for relief visibility
-                  shininess: 150,  // HIGH shininess for sharp relief highlights
-                  emissive: 0x000000,
-                  reflectivity: 1.0,
-                });
-              }
+              // Set up default green material
+              child.material = new THREE.MeshPhongMaterial({
+                color: 0x50c878,
+                specular: 0xffffff,
+                shininess: 150,
+                emissive: 0x000000,
+                reflectivity: 1.0,
+              });
               child.castShadow = true;
               child.receiveShadow = true;
             }
           });
+
+          // Try to fetch and apply layer colors
+          try {
+            const zshift = params?.zshift || 0;
+            const layerData = await smithForgeAPI.getLayers(file, zshift);
+
+            if (layerData && layerData.has_colors && layerData.layers && layerData.layers.length > 0) {
+              console.log(`Applying ${layerData.layers.length} layer colors to result model`);
+
+              // Apply layer colors to all meshes
+              model.traverse((child) => {
+                if (child.isMesh) {
+                  applyLayerColorsToMesh(child, layerData.layers);
+                }
+              });
+            } else {
+              console.log('No layer colors found in result, using default green material');
+            }
+          } catch (err) {
+            console.warn('Could not apply layer colors:', err);
+            // Keep default green material
+          }
 
           // Rotate to lay flat on XY plane
           model.rotation.x = -Math.PI / 2;
@@ -396,7 +463,7 @@ export default function ModelViewer({ hueforgeFile, baseFile, selectedDefaultBas
     };
 
     loadResult();
-  }, [result]);
+  }, [result, params?.zshift]);
 
   const applySmithForgePositioning = () => {
     if (!overlayModelRef.current || !baseModelRef.current) return;
