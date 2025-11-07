@@ -22,7 +22,7 @@ function App() {
     swapInstructionsFile: null,
     autoRepair: false,
     fillGaps: false,
-    outputFormat: 'standard',
+    outputFormat: 'bambu',
     outputName: '',
   });
   const [processing, setProcessing] = useState(false);
