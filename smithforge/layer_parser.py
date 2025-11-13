@@ -106,16 +106,33 @@ def _parse_bambu_layers(zip_ref: zipfile.ZipFile) -> Dict:
         xml_content = zip_ref.read('Metadata/layer_config_ranges.xml')
         root = ET.fromstring(xml_content)
 
+        # Extract filament colors from project_settings.config
+        filament_colors = []
+        try:
+            config_content = zip_ref.read('Metadata/project_settings.config').decode('utf-8')
+            # Extract filament_colour array from JSON using regex
+            match = re.search(r'"filament_colour"\s*:\s*(\[.*?\])', config_content, re.DOTALL)
+            if match:
+                import json
+                filament_colors = json.loads(match.group(1))
+                print(f"  Extracted {len(filament_colors)} filament colors from project_settings.config")
+        except Exception as e:
+            print(f"  Warning: Could not extract filament colors: {e}")
+
         # Parse layer ranges
         for range_elem in root.findall('.//range'):
-            min_z = float(range_elem.get('minZ', 0))
-            max_z = float(range_elem.get('maxZ', 0))
+            min_z = float(range_elem.get('min_z', 0))
+            max_z = float(range_elem.get('max_z', 0))
 
-            # Try to extract color information
+            # Extract extruder number and map to color
             color = None
-            color_elem = range_elem.find('.//filament_colour')
-            if color_elem is not None and color_elem.text:
-                color = color_elem.text.strip()
+            extruder_elem = range_elem.find('.//option[@opt_key="extruder"]')
+            if extruder_elem is not None and extruder_elem.text:
+                extruder_num = int(extruder_elem.text)
+                # Map extruder to color (extruders are 1-based, array is 0-based)
+                if 0 < extruder_num <= len(filament_colors):
+                    color = filament_colors[extruder_num - 1]
+                    print(f"  Range [{min_z:.2f}, {max_z:.2f}]mm -> extruder {extruder_num} -> color {color}")
 
             # Create layer for this range (use max_z as the layer height)
             if max_z > 0:

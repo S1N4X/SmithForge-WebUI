@@ -17,7 +17,7 @@ function App() {
     xshift: null,
     yshift: null,
     zshift: null,
-    colorMode: 'none',
+    colorMode: 'preserve',
     swapInstructionsText: '',
     swapInstructionsFile: null,
     autoRepair: false,

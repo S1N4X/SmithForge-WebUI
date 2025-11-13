@@ -435,6 +435,7 @@ export default function ModelViewer({ hueforgeFile, baseFile, selectedDefaultBas
               });
             } else {
               console.log('No layer colors found in result, using default green material');
+              console.log('Layer data received:', layerData);
             }
           } catch (err) {
             console.warn('Could not apply layer colors:', err);
