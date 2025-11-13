@@ -12,6 +12,7 @@ from typing import List, Dict, Optional, Tuple
 import os
 import re
 import json
+import sys
 
 # Import the embedding constant for reference in layer adjustments
 try:
@@ -116,9 +117,9 @@ def _parse_bambu_layers(zip_ref: zipfile.ZipFile) -> Dict:
             match = re.search(r'"filament_colour"\s*:\s*(\[.*?\])', config_content, re.DOTALL)
             if match:
                 filament_colors = json.loads(match.group(1))
-                print(f"  Extracted {len(filament_colors)} filament colors from project_settings.config")
+                print(f"  Extracted {len(filament_colors)} filament colors from project_settings.config", file=sys.stderr)
         except Exception as e:
-            print(f"  Warning: Could not extract filament colors: {e}")
+            print(f"  Warning: Could not extract filament colors: {e}", file=sys.stderr)
 
         # Parse layer ranges
         for range_elem in root.findall('.//range'):
@@ -133,7 +134,7 @@ def _parse_bambu_layers(zip_ref: zipfile.ZipFile) -> Dict:
                 # Map extruder to color (extruders are 1-based, array is 0-based)
                 if 0 < extruder_num <= len(filament_colors):
                     color = filament_colors[extruder_num - 1]
-                    print(f"  Range [{min_z:.2f}, {max_z:.2f}]mm -> extruder {extruder_num} -> color {color}")
+                    print(f"  Range [{min_z:.2f}, {max_z:.2f}]mm -> extruder {extruder_num} -> color {color}", file=sys.stderr)
 
             # Create layer for this range (use max_z as the layer height)
             if max_z > 0:
