@@ -30,11 +30,11 @@ export default function TransformControls({ expanded, onToggle, params, setParam
           <input
             type="number"
             step="0.1"
-            value={params.forceScale || ''}
-            onChange={(e) => updateParam('forceScale', e.target.value ? parseFloat(e.target.value) : null)}
+            value={params.forceScale ?? ''}
+            onChange={(e) => updateParam('forceScale', e.target.value !== '' ? parseFloat(e.target.value) : null)}
             placeholder="Auto"
             className="block w-full px-2 py-1 text-xs border border-gray-300 dark:border-gray-600 bg-white dark:bg-gray-700 text-gray-900 dark:text-gray-100 rounded placeholder-gray-400 dark:placeholder-gray-500"
-            title="Override automatic scaling with a specific value (e.g., 1.2 = 120% size)"
+            title="Override automatic scaling with a specific value (e.g., 0.9 = 90% size, 1.2 = 120% size)"
           />
         </div>
 
