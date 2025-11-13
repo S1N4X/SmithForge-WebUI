@@ -220,28 +220,33 @@ def inject_color_metadata(output_3mf_path, color_data, z_offset):
             # Range 3: third swap (extruder 4) from second swap Z to third swap Z
             # etc.
 
-            # Add ranges for each color swap (extruders 2+)
-            # Each range represents: [start_z, swap_z) where the swap happens
-            # Range boundaries must be sequential with no gaps or overlaps
+            # Add ranges for each color region
+            # Each range represents a region where a specific extruder is active
+            # Range semantics: [min_z, max_z) uses the specified extruder
+            # Ranges must be sequential with no gaps or overlaps
+
+            # First range: Starting color (extruder 1) from overlay start to first swap
+            first_swap_z = color_data['layers'][0]['top_z'] + z_offset
+            range_elem = ET.SubElement(obj, 'range',
+                                      min_z=f"{z_offset:.17g}",
+                                      max_z=f"{first_swap_z:.17g}")
+            ET.SubElement(range_elem, 'option', opt_key='extruder').text = '1'
+            ET.SubElement(range_elem, 'option', opt_key='layer_height').text = '0.08'
+            print(f"  Range 0: extruder 1 (starting color), Z=[{z_offset:.2f}, {first_swap_z:.2f}]mm")
+
+            # Subsequent ranges: Each swap color from its swap point to the next
             for i, layer_info in enumerate(color_data['layers']):
-                adjusted_z = layer_info['top_z'] + z_offset  # Absolute Z where swap occurs
+                adjusted_z = layer_info['top_z'] + z_offset  # Absolute Z where THIS swap occurs
 
-                # Determine min_z for this range
-                if i == 0:
-                    # FIX BUG #1: First swap range starts at overlay start (not base bottom)
-                    # This ensures extruder 2 only applies to the Hueforge overlay region
-                    min_z = z_offset  # Start at overlay embedding position
+                # This range uses the extruder we're swapping TO at this layer
+                # Range starts at THIS swap's Z and ends at NEXT swap's Z (or model top)
+                min_z = adjusted_z
+
+                if i < len(color_data['layers']) - 1:
+                    # Not last swap: range ends at next swap
+                    max_z = color_data['layers'][i + 1]['top_z'] + z_offset
                 else:
-                    # Subsequent ranges start where previous swap occurred
-                    min_z = color_data['layers'][i - 1]['top_z'] + z_offset
-
-                # Determine max_z for this range
-                # FIX BUG #2: Range ends at THIS swap's Z-height (not next swap's Z)
-                # This creates sequential non-overlapping ranges
-                max_z = adjusted_z
-
-                # For the last layer, extend to a large Z value (infinity)
-                if i == len(color_data['layers']) - 1:
+                    # Last swap: extend to model top
                     max_z = adjusted_z + 1000.0
 
                 range_elem = ET.SubElement(obj, 'range',
@@ -251,7 +256,7 @@ def inject_color_metadata(output_3mf_path, color_data, z_offset):
                 ET.SubElement(range_elem, 'option', opt_key='layer_height').text = '0.08'
 
                 # Debug output
-                print(f"  Range {i}: extruder {layer_info['extruder']}, Z=[{min_z:.2f}, {max_z:.2f}]mm")
+                print(f"  Range {i+1}: extruder {layer_info['extruder']}, Z=[{min_z:.2f}, {max_z:.2f}]mm")
 
             # Write the XML file
             tree = ET.ElementTree(ranges_xml)
