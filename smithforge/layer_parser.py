@@ -10,6 +10,8 @@ import zipfile
 import xml.etree.ElementTree as ET
 from typing import List, Dict, Optional, Tuple
 import os
+import re
+import json
 
 # Import the embedding constant for reference in layer adjustments
 try:
@@ -113,7 +115,6 @@ def _parse_bambu_layers(zip_ref: zipfile.ZipFile) -> Dict:
             # Extract filament_colour array from JSON using regex
             match = re.search(r'"filament_colour"\s*:\s*(\[.*?\])', config_content, re.DOTALL)
             if match:
-                import json
                 filament_colors = json.loads(match.group(1))
                 print(f"  Extracted {len(filament_colors)} filament colors from project_settings.config")
         except Exception as e:
